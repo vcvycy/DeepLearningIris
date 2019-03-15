@@ -133,16 +133,16 @@ def v4locationAug(img , loc, crop_size = (24, 64), scale=2):
     iris["c"][1] -= start_h
 
     # reshape
-    h,w = img.shape[0],img.shape[1]
-    img = cv2.resize(img, (w // scale, h // scale), interpolation=cv2.INTER_CUBIC)
-    iris["c"][0] //= scale
-    iris["c"][1] //= scale
-    iris["r"] //= scale
-    pupil["c"][0] //= scale
-    pupil["c"][1] //= scale
-    pupil["r"] //= scale
+    if scale != 1:
+        h,w = img.shape[0],img.shape[1]
+        img = cv2.resize(img, (w // scale, h // scale), interpolation=cv2.INTER_CUBIC)
+        iris["c"][0] //= scale
+        iris["c"][1] //= scale
+        iris["r"] //= scale
+        pupil["c"][0] //= scale
+        pupil["c"][1] //= scale
+        pupil["r"] //= scale
     # 显示图片
-    # ##
     loc = {"iris": iris, "pupil": pupil}
     # Utils.drawIrisAndShow(img, loc)
     return img,loc

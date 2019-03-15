@@ -30,10 +30,10 @@ class DSIris:
         return filename_list
 
     # (*) 创建Tensorflow 队列, 文件为self.filenames
-    def createTFQueue(self,num_epochs=50):
+    def createTFQueue(self,num_epochs=50,shuffle=True):
         print("[*]正在创建TF 队列...")
         # (*) 定义节点
-        self.queue = tf.train.string_input_producer(self.images_path, num_epochs = num_epochs, shuffle=True)
+        self.queue = tf.train.string_input_producer(self.images_path, num_epochs = num_epochs, shuffle=shuffle)
         self.reader = tf.WholeFileReader()
         item_filename, item_binary = self.reader.read(self.queue)
         self.queue_item = (item_filename, tf.image.decode_jpeg(item_binary))

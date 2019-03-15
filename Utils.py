@@ -30,7 +30,7 @@ def drawAndShowBaseOnCNNOutput(img, o):
     pupil_c = int((o[5]+o[7])/2*w),int((o[4]+o[6])/2*h)
     pupil_r = max( int((o[7]-o[5])/2*w) , int((o[6]-o[4])/2*h),0)
     cv2.circle(img, iris_c, iris_r, (255, 0, 255), thickness=3)
-    cv2.circle(img, pupil_c, pupil_r, (255, 0, 255), thickness=3)
+    # cv2.circle(img, pupil_c, pupil_r, (255, 0, 255), thickness=3)
     showImage(img)
     return
 
