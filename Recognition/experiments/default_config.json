@@ -1,0 +1,13 @@
+{
+  "learning_rate" :1e-4,
+  "resnet_stack_n" : 1,
+  "batch_size" : 40,
+  "total_training_steps" : 1000,
+  "classes" :2000,
+  "input_w": 240,
+  "iris_training_dir": "E:/IrisDataset/CASIA-Iris-Thousand",
+  "save_every_steps" : 100,
+  "l2_lambda" : 1e-4,
+  "momemtum" : 0.9,
+  "triplet_loss_margin":0.5
+}
