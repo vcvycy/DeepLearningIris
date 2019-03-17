@@ -16,6 +16,7 @@ class Config():
     """
 
     def __init__(self, json_path):
+        print(json_path)
         self.update(json_path)
 
     def save(self, json_path):

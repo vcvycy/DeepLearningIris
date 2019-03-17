@@ -85,19 +85,19 @@ def v4locationAug(img , loc, crop_size = (24, 64), scale=2):
     iris = loc["iris"]
     pupil = loc["pupil"]
     # 白块(模拟反光)
-    drawRandomCircle(img,(5,8),(0,10),color_range=(180,255))
-    drawRandomCircle(img,(20,50),(0,2),color_range=(180,255))
+    drawRandomCircle(img,(5,8),(0,10),color_range=(230,255))
+    #drawRandomCircle(img,(20,50),(0,2),color_range=(180,255))
 
     # 黑色线条 (模拟眼镜)
-    drawRandomLine(img,(5,10), (0,3), color_range=(0,50))
+    # drawRandomLine(img,(5,10), (0,3), color_range=(0,50))
 
     # 翻转+模糊+crop
     seq = iaa.Sequential([
         # iaa.SomeOf((0,1),   [iaa.Fliplr(0.5)]),        # 一半的概率左右翻转
         iaa.OneOf([
             iaa.GaussianBlur((0, 3.0)),
-            iaa.AverageBlur(k=(2, 7)),
-            iaa.MedianBlur(k=(3, 11)),
+            iaa.AverageBlur(k=(2, 3)),
+            iaa.MedianBlur(k=(3, 7)),
         ])
      ])
     img = seq.augment_image(img)
@@ -147,6 +147,38 @@ def v4locationAug(img , loc, crop_size = (24, 64), scale=2):
     # Utils.drawIrisAndShow(img, loc)
     return img,loc
 
+def v4OnetAug(img , loc):
+    # 虹膜/瞳孔位置
+    iris = loc["iris"]
+    pupil = loc["pupil"]
+    # 白块(模拟反光)
+    drawRandomCircle(img,(5,8),(0,10),color_range=(230,255))
+    #drawRandomCircle(img,(20,50),(0,2),color_range=(180,255))
+
+    # 黑色线条 (模拟眼镜)
+    # drawRandomLine(img,(5,10), (0,3), color_range=(0,50))
+
+    # 翻转+模糊+crop
+    seq = iaa.Sequential([
+        # iaa.SomeOf((0,1),   [iaa.Fliplr(0.5)]),        # 一半的概率左右翻转
+        iaa.OneOf([
+            iaa.GaussianBlur((0, 3.0)),
+            iaa.AverageBlur(k=(2, 3)),
+            iaa.MedianBlur(k=(3, 7)),
+        ])
+     ])
+    img = seq.augment_image(img)
+
+    # 左右翻转
+    h, w =img.shape[0],img.shape[1]
+    if  random.randint(0,1) == 0:
+        img = cv2.flip(img,1)
+        pupil["c"][0] = w - 1 - pupil["c"][0]
+        iris["c"][0]  = w - 1 - iris["c"][0]
+
+    loc = {"iris": iris, "pupil": pupil}
+    # Utils.drawIrisAndShow(img, loc)
+    return img,loc
 ###### TEST #########
 if __name__ == "__main__":
     while True:
