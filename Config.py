@@ -16,7 +16,6 @@ class Config():
     """
 
     def __init__(self, json_path):
-        print(json_path)
         self.update(json_path)
 
     def save(self, json_path):
@@ -29,6 +28,11 @@ class Config():
         with open(json_path) as f:
             params = json.load(f)
             self.__dict__.update(params)
+
+    def show(self):
+        print("[*]config")
+        for key in self.__dict__:
+            print("    [*] {0} = {1}".format(key,self.__dict__[key]))
 
     @property
     def dict(self):

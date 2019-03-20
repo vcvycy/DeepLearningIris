@@ -147,13 +147,13 @@ def v4locationAug(img , loc, crop_size = (24, 64), scale=2):
     # Utils.drawIrisAndShow(img, loc)
     return img,loc
 
-def v4OnetAug(img , loc):
+def v4MTCNNAug(img, loc):
     # 虹膜/瞳孔位置
     iris = loc["iris"]
     pupil = loc["pupil"]
     # 白块(模拟反光)
     drawRandomCircle(img,(5,8),(0,10),color_range=(230,255))
-    #drawRandomCircle(img,(20,50),(0,2),color_range=(180,255))
+    #drawRandomCircle(img,(20,50),(0,1),color_range=(250,255))
 
     # 黑色线条 (模拟眼镜)
     # drawRandomLine(img,(5,10), (0,3), color_range=(0,50))
@@ -179,6 +179,7 @@ def v4OnetAug(img , loc):
     loc = {"iris": iris, "pupil": pupil}
     # Utils.drawIrisAndShow(img, loc)
     return img,loc
+
 ###### TEST #########
 if __name__ == "__main__":
     while True:
