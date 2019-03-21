@@ -1,4 +1,4 @@
-# Triple Loss 实现
+# Triplet Loss 实现
 # (1) batch_hard_triplet_loss  只返回最难的三元组loss 值的和
 # (2) batch_all_triplet_loss   返回所有非easy(||a-p|| - ||a-n||+margin>0) 的三元组的loss
 """Define functions to create the triplet loss with online triplet mining."""

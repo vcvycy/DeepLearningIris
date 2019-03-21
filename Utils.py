@@ -106,9 +106,9 @@ def showImageWithBBR(image,rect,bbr=[0,0,0,0],copy=True,show=True):
 def drawRectsAndShow(img,*rects):
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     c=[
+        (0,255,0),
         (0,0,255),
-        (255,0,0),
-        (0,255,0)
+        (255,0,0)
     ]
     num = len(rects)
     for i in range(num):
@@ -201,8 +201,21 @@ def toSquareShape(rect):
     assert r[2]-r[0] == r[3]-r[1] , " rect :{}".format(r)
     return r
 
+def rect_pad_and_crop(img,rect,pad=0):
+    # rect padding
+    rect = list(rect)
+    h,w = img.shape[:2]
+    pad_top_left = min(pad, rect[0], rect[1])
+    rect[0] -= pad_top_left
+    rect[1] -= pad_top_left
+    pad_right_bottom = min(pad, h-1-rect[2], w-1-rect[3])
+    rect[2] += pad_right_bottom
+    rect[3] += pad_right_bottom
+    #
+    img = img[rect[0]:rect[2] + 1, rect[1]:rect[3] + 1]
+    return img
+
 if __name__ == "__main__":
     r=(0,0,2,2)
     r2=(1,1,3,3)
     print(getIOU(r,r2))
-    print(getRandomSquare(480,640))
