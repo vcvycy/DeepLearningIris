@@ -67,21 +67,14 @@ def getIOU(r1,r2,method = "Union"):
     else:
         raise Exception("method")
 
-# 获取随机正方形,等概率选取不好取，用先取中心点，再取边长近似( 导致越靠近四条边的正方形概率越大)
-# 此API不用，等概率生成见 RandomSquare.py
-def getRandomSquare(h,w):
-    # 中心点
-    cx = random.randint(0,h-1)
-    cy = random.randint(0,w-1)
-    # 长度
-    max_r = min(cx+1, cy+1, h-cx, w-cy)
-    r = random.randint(1,max_r)
-    return cx
+# 获取随机正方形,
+
+def getRandomLenSquare(h,w,min_len = 12):
     # 以下是先随机边长，后随机位置
-    # size = random.randint(1, min(h,w))      # 不同边长的矩形并非等概率分布，会导致边长越大的正方形，概率越高，看作等概率分布
-    # x = random.randint(0, h - size)
-    # y = random.randint(0, w - size)
-    #return x, y, x+size-1 , y+size-1
+    size = random.randint(min_len, min(h,w))      # 不同边长的矩形并非等概率分布，会导致边长越大的正方形，概率越高，看作等概率分布
+    x = random.randint(0, h - size)
+    y = random.randint(0, w - size)
+    return x, y, x+size-1 , y+size-1
 
 def bbr_calibrate(rect,bbr, shape=None):
     h = rect[2]-rect[0]
@@ -193,10 +186,20 @@ def getImagePyramid(img,min_iris_size = 100,max_iris_size = 300):
         # print(scaled_img.shape)
         # showImage(scaled_img)
         images.append((scaled_img,scale))
-        iris_size *=0.709
+        iris_size *= 0.709
     return images
 
 
+# 转为方形，切除超出方形的区域
+def toSquareShape(rect):
+    h = rect[2] - rect[0]
+    w = rect[3] - rect[1]
+    if w > h:
+        r = rect[0], rect[1]+ (w-h)//2, rect[2] , rect[3]-(w-h+1)//2
+    else:
+        r = rect[0]+ (h-w)//2, rect[1], rect[2] - (h-w+1)//2, rect[3]
+    assert r[2]-r[0] == r[3]-r[1] , " rect :{}".format(r)
+    return r
 
 if __name__ == "__main__":
     r=(0,0,2,2)
