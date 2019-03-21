@@ -33,10 +33,11 @@ if __name__ == "__main__":
     ds = DSV4Recog.DSV4Recog(sess,
                              config.iris_training_images_dir,
                              steps=config.total_training_steps,
-                             input_size= 200,
-                             crop_pixels= 10,
+                             input_size= config.input_size,
+                             crop_pixels= config.crop_each_side,
                              batch_img_num_each_class= config.batch_img_num_each_class,
-                             batch_class_num= config.batch_class_num
+                             batch_class_num= config.batch_class_num,
+                             training_classes= config.training_classes
                              )
     # import signal
     # def signal_handler(signal, frame):
@@ -48,12 +49,12 @@ if __name__ == "__main__":
     # 开始训练
     while True:
         batch = ds.getBatch()
-        loss,cur_step = resnet.train(batch[0],batch[1],learning_rate= config.learning_rate)
+        loss,cur_step = resnet.train(batch[0], batch[1], learning_rate= config.learning_rate)
         print("[*] Step[{0}] loss{1} ".format(cur_step,loss))
 
         # 每隔 save_every_steps ，保存一次模型
         if cur_step % config.save_every_steps == 0:
-            resnet.save(os.path.join(train_on_dir,"model/at_step"),cur_step)
+            resnet.save(os.path.join(train_on_dir,"model/at_step"), cur_step)
 
         # 训练完 total_training_steps 后，退出程序
         if cur_step > config.total_training_steps:

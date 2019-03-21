@@ -1,5 +1,5 @@
 import tensorflow as tf
-from Recognition import TripleLoss
+from Recognition import TripletLoss
 """
 (1)构造函数__init__参数
   input_sz：  输入层placeholder的4-D shape，如mnist是[None,28,28,1] 
@@ -26,12 +26,13 @@ class ResNet:
     FC_WEIGHT_INITAILIZER = tf.keras.initializers.he_normal()  # tf.truncated_normal_initializer(stddev=0.1)
     FC_BIAS_INITAILIZER = tf.constant_initializer(value=0.0)
 
-    def train(self, batch_input, batch_output, learning_rate):
+    def train(self, batch_input, batch_output, learning_rate): 
         _, loss,summary_val , global_step = self.sess.run([self.optimizer, self.loss,self.all_summary,self.global_step],
-                                          feed_dict={self.input: batch_input, self.desired_out: batch_output,
+                                          feed_dict={self.input: batch_input,
+                                                     self.desired_out: batch_output,
                                                      self.learning_rate: learning_rate})
         self.writer.add_summary(summary_val,global_step)
-        return loss,global_step
+        return loss, global_step
 
     def forward(self, batch_input):
         return self.sess.run(self.embed, feed_dict={self.input: batch_input})
@@ -146,20 +147,20 @@ class ResNet:
                 y = tf.add(x, y)
             return y
 
-    def __init__(self,config, tboard_dir):  #
+    def __init__(self,sess, config, tboard_dir):  #
         self.config = config
-        input_sz = [None,config.input_w,config.input_w,1]
-        output_sz = [None]
+        input_shape = [None,config.input_size,config.input_size,1]
+        output_shape = [None]
         stack_n = config.resnet_stack_n
+        self.sess = sess
         with tf.variable_scope("LAYERS_EXCEPT_SOFTMAX"):
             # if True:
             self.ACTIVATE = tf.nn.relu
             self.param_num = 0  # 返回参数个数
-            self.sess = tf.Session()
             layers = []
             # (1)placeholder定义(输入、输出、learning_rate)
             # input
-            self.input = tf.placeholder(tf.float32, input_sz, name="input")
+            self.input = tf.placeholder(tf.float32, input_shape, name="input")
             layers.append(self.input)
             #
             layers.append(self.bn(layers[-1]))
@@ -219,14 +220,16 @@ class ResNet:
                 x = layers[-1]
                 y = self.bn(x)
                 y = self.ACTIVATE(y)
-                self.embed = self.fc(y, 128, "embedding")
+                y = self.fc(y, 128, "embedding")
+                self.embed = y/tf.sqrt(tf.reduce_sum(y*y))
                 layers.append(self.embed)
 
         self.learning_rate = tf.placeholder(tf.float32, name="learning_rate")
-        self.desired_out = tf.placeholder(tf.float32, output_sz, name="desired_out")
+        self.desired_out = tf.placeholder(tf.float32, output_shape, name="desired_out")
         self.global_step = tf.Variable(0, name="global_step", trainable=False)
-        self.loss,_ = TripleLoss.batch_all_triplet_loss(self.desired_out,self.embed,config.triplet_loss_margin)
+        self.loss,_ = TripletLoss.batch_all_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)
         tf.summary.scalar("Loss", self.loss)
+        tf.summary.scalar("Learning Rate", self.learning_rate)
         self.all_summary = tf.summary.merge_all()
         # output
         # loss函数
