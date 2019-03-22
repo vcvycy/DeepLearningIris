@@ -27,7 +27,7 @@ if __name__ == "__main__":
     resnet=ResNet.ResNet(sess, config,os.path.join(train_on_dir,"tboard"))
     print("[*]网络参数%d" %(resnet.param_num))
     # restore
-    resnet.restore(os.path.join(os.path.join(train_on_dir,"model")))
+    resnet.restore_embedding(os.path.join(os.path.join(train_on_dir, "model")))
 
     # 数据集
     ds = DSV4Recog.DSV4Recog(sess,
@@ -46,6 +46,7 @@ if __name__ == "__main__":
     #     sys.exit(0)
     # signal.signal(signal.SIGINT, signal_handler)
 
+
     # 开始训练
     while True:
         batch = ds.getBatch()
@@ -54,7 +55,9 @@ if __name__ == "__main__":
 
         # 每隔 save_every_steps ，保存一次模型
         if cur_step % config.save_every_steps == 0:
-            resnet.save(os.path.join(train_on_dir,"model/at_step"), cur_step)
+            resnet.save_embedding(os.path.join(train_on_dir,"model/at_step"), cur_step)
+
+        # resnet.save_embedding(os.path.join(train_on_dir,"model/at_step"), cur_step)
 
         # 训练完 total_training_steps 后，退出程序
         if cur_step > config.total_training_steps:

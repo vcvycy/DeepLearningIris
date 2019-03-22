@@ -36,10 +36,22 @@ class ResNet:
     def forward(self, batch_input):
         return self.sess.run(self.embed, feed_dict={self.input: batch_input})
 
+    def getSaverCollection(self):
+        vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='LAYERS_EXCEPT_SOFTMAX')
+        vars.append(self.global_step)
+        return vars
+
+
     def save(self, save_path, steps):
-        saver = tf.train.Saver(max_to_keep=5)
+        saver = tf.train.Saver()
         saver.save(self.sess, save_path, global_step=steps)
         print("[*]save success")
+
+    def save_embedding(self,save_path, steps):
+        saver = tf.train.Saver(self.getSaverCollection())
+        saver.save(self.sess, save_path, global_step=steps)
+
+
 
     def restore(self, restore_path):
         path = tf.train.latest_checkpoint(restore_path)
@@ -50,23 +62,11 @@ class ResNet:
         print("[*]Restore from %s success" % (path))
         return True
 
-    def restore_except_softmax_layer(self, restore_path):
+    def restore_embedding(self, restore_path):
         path = tf.train.latest_checkpoint(restore_path)
         if path == None:
             return False
-        var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="LAYERS_EXCEPT_SOFTMAX")
-        """
-        var_dict={}
-        for var in var_list:
-          if var.name[0]=="L":
-            new_name=var.name[22:]
-            new_name=new_name[0:len(new_name)-2]
-            if new_name[0]=="F":
-              continue
-            var_dict[new_name]=var   
-            print("[%d]%s" %(len(var_dict),new_name))
-        """
-        saver = tf.train.Saver(var_list=var_list)
+        saver = tf.train.Saver(var_list= self.getSaverCollection())
         saver.restore(self.sess, path)
         print("[*]restore_except_softmax_layer %s success" % (path))
         return True

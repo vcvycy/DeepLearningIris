@@ -13,9 +13,10 @@ class DSV4Recog(DSIris):
     # (*) ds_root : 数据集根目录
     #       image_dir : 从哪个文件夹载入
     def __init__(self,sess,
-                 image_dir,steps = 10000,
-                 input_size =200,
-                 crop_pixels =10,
+                 image_dir,
+                 steps,
+                 input_size ,
+                 crop_pixels ,
                  batch_img_num_each_class =5,
                  batch_class_num=8,
                  training_classes =2000):
