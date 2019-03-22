@@ -17,7 +17,6 @@ def load_iris_position(in_file):
     print("[*] 载入%s 文件(保存文件对应的虹膜/瞳孔位置)" %(in_file))
     f = open(in_file,"r")
     json_obj = json.loads(f.read())
-    print("     [*] 文件个数:%s" %(len(json_obj)))
     f.close()
     return json_obj
 
@@ -32,7 +31,7 @@ def draw_circle(path, postion):
 
 # 读取Json位置信息和图片根目录
 # 将其保存到save_dir中
-def main_location(json_file,image_root,save_dir=None):
+def main_location(json_file,image_root,save_dir=None,show=False):
     # 读取所有文件列表
     filename2path =getFileSet(image_root)
     print("[*] 目录%s文件个数:%d" %(image_root,len(filename2path)))
@@ -53,24 +52,42 @@ def main_location(json_file,image_root,save_dir=None):
             files_iou.add(filename)
     print("     [*]json存在的图片和目录中的图片取交集后的大小:%d" %(len(files_iou)))
 
+    # 只保留filename2path, filename2position 相交的部分
+    del_files = set()
+    for filename in filename2path:
+        if filename not in files_iou:
+            del_files.add(filename)
+    for f in del_files:
+        filename2path.pop(f)
+    del_files = set()
+    for filename in filename2position:
+        if filename not in filename2position:
+            del_files.add(filename)
+    for f in del_files:
+        filename2position.pop(f)
     # 上面二者融合
     for filename in files_iou:
+        ## 以下画圆，保存或者显示
         path = filename2path[filename]
         position = filename2position[filename]
-        img = draw_circle(path,position)
+        if save_dir!= None or show:
+            img = draw_circle(path,position)
         if save_dir != None:
             save_path = os.path.join(save_dir,filename)
             cv2.imwrite(save_path,img)
             print(save_path)
-        else:
+        if show:
+            print(filename)
+            print(position)
             cv2.namedWindow("cjf")
             cv2.imshow("cjf",img)
             cv2.waitKey(0)
-    return filename2position,filename2path
+    return filename2path,filename2position
 
 if __name__ == "__main__":
     json_file = r"E:\CASIA-V4-Location\Iris_Pupil_Position.json"   # 格式为 V4_ROOT/000/L/SXXX.jpg
     location_data_root = r"E:\CASIA-V4-Location"
     save_dir = None  # 为None时，不保存，仅仅显示出来
     # save_dir = r"E:\CASIA-V4-Location-View"
-    main_location(json_file,location_data_root,save_dir)
+    f2p,f2pos= main_location(json_file,location_data_root,None,False)
+    print(len(f2p))

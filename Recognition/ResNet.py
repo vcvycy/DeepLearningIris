@@ -31,8 +31,6 @@ class ResNet:
                                           feed_dict={self.input: batch_input,
                                                      self.desired_out: batch_output,
                                                      self.learning_rate: learning_rate})
-        if global_step%10==0:
-            self.writer.add_summary(summary_val,global_step)
         return loss, global_step
 
     def forward(self, batch_input):

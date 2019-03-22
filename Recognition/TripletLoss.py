@@ -158,17 +158,18 @@ def batch_all_triplet_loss(labels, embeddings, margin, squared=False):
 
     # Put to zero the invalid triplets
     # (where label(a) != label(p) or label(n) == label(a) or a == p)
-    mask = _get_triplet_mask(labels)
+    mask = _get_triplet_mask(labels)             # mask(n*n*n) ，当且仅当 label(a)=label(p)!=label(n) 且a!=p时，mask = True
     mask = tf.to_float(mask)
     triplet_loss = tf.multiply(mask, triplet_loss)
 
+    # 即 当 dist(a,n) - dist(a,p) > margin时，此三元组Loss为0 ，不参与训练
     # Remove negative losses (i.e. the easy triplets)
     triplet_loss = tf.maximum(triplet_loss, 0.0)
 
     # Count number of positive triplets (where triplet_loss > 0)
-    valid_triplets = tf.to_float(tf.greater(triplet_loss, 1e-16))  # tf.greater 返回 boolean类型的tensor
-    num_positive_triplets = tf.reduce_sum(valid_triplets)
-    num_valid_triplets = tf.reduce_sum(mask)
+    valid_triplets = tf.to_float(tf.greater(triplet_loss, 1e-16))
+    num_positive_triplets = tf.reduce_sum(valid_triplets)          # positive_triplets ：即loss 值>0 的合法triplet
+    num_valid_triplets = tf.reduce_sum(mask)                       # 所有valid的 triplets (即 label(a)=label(p)!=label(n) 且a!=p时)
     fraction_positive_triplets = num_positive_triplets / (num_valid_triplets + 1e-16)  # 合法(loss>0) 的三元组占的比例
 
     # Get final mean triplet loss over the positive valid triplets
