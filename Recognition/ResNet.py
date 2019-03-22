@@ -26,12 +26,13 @@ class ResNet:
     FC_WEIGHT_INITAILIZER = tf.keras.initializers.he_normal()  # tf.truncated_normal_initializer(stddev=0.1)
     FC_BIAS_INITAILIZER = tf.constant_initializer(value=0.0)
 
-    def train(self, batch_input, batch_output, learning_rate): 
+    def train(self, batch_input, batch_output, learning_rate):
         _, loss,summary_val , global_step = self.sess.run([self.optimizer, self.loss,self.all_summary,self.global_step],
                                           feed_dict={self.input: batch_input,
                                                      self.desired_out: batch_output,
                                                      self.learning_rate: learning_rate})
-        self.writer.add_summary(summary_val,global_step)
+        if global_step%10==0:
+            self.writer.add_summary(summary_val,global_step)
         return loss, global_step
 
     def forward(self, batch_input):

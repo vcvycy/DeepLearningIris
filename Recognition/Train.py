@@ -32,7 +32,7 @@ if __name__ == "__main__":
     # 数据集
     ds = DSV4Recog.DSV4Recog(sess,
                              config.iris_training_images_dir,
-                             steps=config.total_training_steps,
+                             steps= min(101000,config.total_training_steps),
                              input_size= config.input_size,
                              crop_pixels= config.crop_each_side,
                              batch_img_num_each_class= config.batch_img_num_each_class,
