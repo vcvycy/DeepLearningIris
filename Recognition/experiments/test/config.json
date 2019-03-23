@@ -1,7 +1,7 @@
 {
   "iris_training_images_dir" : "E:/iris_crop",
   "learning_rate" :0.0005,
-  "classification_loss_weight": 1,
+  "classification_loss_weight": 0.15 ,
   "total_training_steps" : 50,
   "save_every_steps" : 1000,
   "training_classes": 2000,

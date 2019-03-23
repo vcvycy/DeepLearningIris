@@ -35,16 +35,23 @@ class ResNet:
         return loss, global_step
 
     def  trainWithClassification(self, batch_input, batch_output,batch_output_ont_hot, learning_rate, cls_weight):
-        _, loss,summary_val , global_step = self.sess.run([self.optimizer, self.loss,self.all_summary,self.global_step],
-                                          feed_dict={self.input: batch_input,
-                                                     self.desired_out: batch_output,
-                                                     self.ont_hot_label : batch_output_ont_hot,
-                                                     self.learning_rate: learning_rate,
-                                                     self.classfication_loss_weight : cls_weight
-                                                     })
+        _, loss,summary_val , global_step, l1,l2,l3,l4 = self.sess.run([self.optimizer,
+                                                           self.loss,
+                                                           self.all_summary,
+                                                           self.global_step,
+                                                           self.l2_loss,
+                                                           self.classfication_loss,
+                                                           self.trilet_loss,
+                                                           self.loss],
+                                                          feed_dict={self.input: batch_input,
+                                                                     self.desired_out: batch_output,
+                                                                     self.ont_hot_label : batch_output_ont_hot,
+                                                                     self.learning_rate: learning_rate,
+                                                                     self.classfication_loss_weight : cls_weight
+                                                                     })
+        print("[*]loss = %s  %s  %s  %s" %(l1, l2, l3, l4))
         self.writer.add_summary(summary_val,global_step)
         return loss, global_step
-        return
 
     def forward(self, batch_input):
         return self.sess.run(self.embed, feed_dict={self.input: batch_input})
@@ -247,14 +254,14 @@ class ResNet:
         self.trilet_loss, _ = TripletLoss.batch_all_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)
         self.loss = self.l2_loss + self.trilet_loss
 
-        if config.classification_loss_weight > 1e-8:
-            ####### 分类loss
-            self.classfication_loss_weight = tf.placeholder(tf.float32,name =  "classfication_loss_weight")
-            self.classfication_loss = self.classfication_loss_weight * \
-                tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits= self.one_hot_output, labels=self.ont_hot_label))
-            tf.summary.scalar("Classification Loss", self.classfication_loss)
-            self.loss += self.classfication_loss
+        ####### 分类loss
+        self.classfication_loss_weight = tf.placeholder(tf.float32,name =  "classfication_loss_weight")
+        self.classfication_loss = self.classfication_loss_weight * \
+            tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits= self.one_hot_output, labels=self.ont_hot_label))
 
+        self.loss = tf.add_n([self.l2_loss, self.trilet_loss,self.classfication_loss], name = "Loss")
+
+        tf.summary.scalar("Classification Loss", self.classfication_loss)
         tf.summary.scalar("L2 Loss",self.l2_loss)
         tf.summary.scalar("Triplet Loss",self.trilet_loss)
         tf.summary.scalar("Loss", self.loss)

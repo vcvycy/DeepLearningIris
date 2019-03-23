@@ -40,7 +40,10 @@ if __name__ == "__main__":
     resnet=ResNet.ResNet(sess, config,os.path.join(train_on_dir,"tboard"))
     print("[*]网络参数%d" %(resnet.param_num))
     # restore
-    # resnet.restore_embedding(os.path.join(os.path.join(train_on_dir, "model")))
+    try:
+        resnet.restore_embedding(os.path.join(os.path.join(train_on_dir, "model")))
+    except:
+        print("[*] restore失败")
 
     # 数据集
     ds = DSV4Recog.DSV4Recog(sess,
