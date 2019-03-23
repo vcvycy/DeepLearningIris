@@ -57,7 +57,7 @@ class ResNet:
         return self.sess.run(self.embed, feed_dict={self.input: batch_input})
 
     def getSaverCollection(self):
-        vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='LAYERS_EXCEPT_SOFTMAX')
+        vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='EmbeddingLayers')
         vars.append(self.global_step)
         return vars
 
@@ -172,20 +172,20 @@ class ResNet:
         output_shape = [None]
         stack_n = config.resnet_stack_n
         self.sess = sess
-        with tf.variable_scope("LAYERS_EXCEPT_SOFTMAX"):
+        layers = []
+        # (1)placeholder定义(输入、输出、learning_rate)
+        # input
+        self.input = tf.placeholder(tf.float32, input_shape, name="input")
+        layers.append(self.input)
+        #
+        with tf.variable_scope("EmbeddingLayers"):
+            layers.append(self.bn(layers[-1]))
             # if True:
             self.ACTIVATE = tf.nn.relu
             self.param_num = 0  # 返回参数个数
-            layers = []
-            # (1)placeholder定义(输入、输出、learning_rate)
-            # input
-            self.input = tf.placeholder(tf.float32, input_shape, name="input")
-            layers.append(self.input)
-            #
-            layers.append(self.bn(layers[-1]))
             # (2)插入卷积层+池化层
             x = layers[-1]
-            y = self.conv(x, "first_conv", 16, ksize=[7, 7])
+            y = self.conv(x, "first_conv", 16, ksize=[3, 3])
             y = self.max_pool(y, "first_pool")
             layers.append(y)
             with tf.variable_scope("Residual_Blocks"):
@@ -243,23 +243,24 @@ class ResNet:
                 self.embed = y/tf.sqrt(tf.reduce_sum(y*y))
                 layers.append(self.embed)
 
-            self.one_hot_output = self.fc(self.embed, config.training_classes, "one_hot_output")
-            self.ont_hot_label = tf.placeholder(tf.float32, [None,config.training_classes], name = "one_hot_label")
 
         self.learning_rate = tf.placeholder(tf.float32, name="learning_rate")
         self.desired_out = tf.placeholder(tf.float32, output_shape, name="desired_out")
         self.global_step = tf.Variable(0, name="global_step", trainable=False)
 
         self.l2_loss = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES),name="l2_loss")
-        self.trilet_loss, _ = TripletLoss.batch_all_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)
-        self.loss = self.l2_loss + self.trilet_loss
+        with tf.variable_scope("TripletLoss"):
+            self.trilet_loss, _ = TripletLoss.batch_all_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)
 
         ####### 分类loss
-        self.classfication_loss_weight = tf.placeholder(tf.float32,name =  "classfication_loss_weight")
-        self.classfication_loss = self.classfication_loss_weight * \
-            tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits= self.one_hot_output, labels=self.ont_hot_label))
+        with tf.variable_scope("ClassificationLayers"):
+            self.one_hot_output = self.fc(self.embed, config.training_classes, "one_hot_output")
+            self.ont_hot_label = tf.placeholder(tf.float32, [None,config.training_classes], name = "one_hot_label")
+            self.classfication_loss_weight = tf.placeholder(tf.float32,name =  "classfication_loss_weight")
+            self.classfication_loss = self.classfication_loss_weight * \
+                tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits= self.one_hot_output, labels=self.ont_hot_label))
 
-        self.loss = tf.add_n([self.l2_loss, self.trilet_loss,self.classfication_loss], name = "Loss")
+        self.loss = tf.add_n([self.l2_loss, self.trilet_loss,self.classfication_loss], name = "WeightedLoss")
 
         tf.summary.scalar("Classification Loss", self.classfication_loss)
         tf.summary.scalar("L2 Loss",self.l2_loss)

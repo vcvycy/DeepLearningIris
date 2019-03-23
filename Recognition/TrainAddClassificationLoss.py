@@ -2,6 +2,8 @@ import sys
 import os
 sys.path.append(os.path.join(os.getcwd(),".."))
 sys.path.append(os.getcwd())
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 import tensorflow as tf
 from Recognition import ResNet
 from Recognition import  DSV4Recog
@@ -55,8 +57,6 @@ if __name__ == "__main__":
                              batch_class_num= config.batch_class_num,
                              training_classes= config.training_classes
                              )
-
-
     # 开始训练
     while True:
         batch = ds.getBatch()
@@ -72,10 +72,10 @@ if __name__ == "__main__":
         if cur_step % config.save_every_steps == 0:
             resnet.save_embedding(os.path.join(train_on_dir,"model/at_step"), cur_step)
 
-        resnet.save_embedding(os.path.join(train_on_dir,"model/at_step"), cur_step)
+        # resnet.save_embedding(os.path.join(train_on_dir,"model/at_step"), cur_step)
         # 更新配置
         config.update(config_path)
 
         # 训练完 total_training_steps 后，退出程序
-        if cur_step > config.total_training_steps:
-            break
+        #if cur_step > config.total_training_steps:
+        #    break
