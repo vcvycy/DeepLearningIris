@@ -52,7 +52,7 @@ if __name__ == "__main__":
     sess = tf.Session()
 
     # 数据集
-    test_data = DSV4MTCNN.DSV4MTCNN(sess, config.iris_position_json_file, r"E:\CASIA-V4-Location\tmp", config.pos_iou, config.neg_iou)
+    test_data = DSV4MTCNN.DSV4MTCNN(sess, config.iris_position_json_file, r"E:\CASIA-V4-Location\test", config.pos_iou, config.neg_iou)
     # 网络
     onet = IrisONet(sess,config,experiment_dir,target="test")
     try:

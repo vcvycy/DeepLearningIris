@@ -14,6 +14,13 @@ import argparse
 #     resnet.save(os.path.join(train_on_dir, "model/at_step"), cur_step)
 #     sys.exit(0)
 # signal.signal(signal.SIGINT, signal_handler)
+def toOneHot(label, classes):
+    one_hot_label = []
+    for v in label:
+        l = [0 for _ in range(classes)]
+        l[v] = 1
+        one_hot_label.append(l)
+    return one_hot_label
 if __name__ == "__main__":
     # 读取训练存放目录；已经目录中的配置文件
     parser = argparse.ArgumentParser()
@@ -33,7 +40,7 @@ if __name__ == "__main__":
     resnet=ResNet.ResNet(sess, config,os.path.join(train_on_dir,"tboard"))
     print("[*]网络参数%d" %(resnet.param_num))
     # restore
-    resnet.restore_embedding(os.path.join(os.path.join(train_on_dir, "model")))
+    # resnet.restore_embedding(os.path.join(os.path.join(train_on_dir, "model")))
 
     # 数据集
     ds = DSV4Recog.DSV4Recog(sess,
@@ -50,7 +57,12 @@ if __name__ == "__main__":
     # 开始训练
     while True:
         batch = ds.getBatch()
-        loss,cur_step = resnet.train(batch[0], batch[1], learning_rate= config.learning_rate)
+        loss,cur_step = resnet.trainWithClassification(batch_input = batch[0],
+                                                       batch_output = batch[1],
+                                                       batch_output_ont_hot= toOneHot(batch[1],config.training_classes),
+                                                       learning_rate= config.learning_rate,
+                                                       cls_weight=  config.classification_loss_weight
+                                                        )
         print("[*] Step[{0}] loss{1} ".format(cur_step,loss))
 
         # 每隔 save_every_steps ，保存一次模型
@@ -60,6 +72,7 @@ if __name__ == "__main__":
         resnet.save_embedding(os.path.join(train_on_dir,"model/at_step"), cur_step)
         # 更新配置
         config.update(config_path)
+
         # 训练完 total_training_steps 后，退出程序
-        #if cur_step > config.total_training_steps:
-        #    break
+        if cur_step > config.total_training_steps:
+            break

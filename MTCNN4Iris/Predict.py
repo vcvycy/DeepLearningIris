@@ -33,7 +33,7 @@ class Predictor:
             rects =  self.pnet_predictor.predict(img, threshold = 0.2)
         if len(rects) == 0:
             raise Exception("PNet 找不到rect")
-        # Utils.drawRectsListAndShow(img, rects)
+        Utils.drawRectsListAndShow(img, rects)
         # ONet
         final = (0, None, None)
         for rect in rects:
@@ -58,8 +58,8 @@ if __name__ == "__main__":
     # 数据集
     test_dir = r"E:\IrisDataset\CASIA-Iris-Thousand"
     save_to  = r"e:\iris_crop"
-    # test_dir = r"E:\CASIA-V4-Location\tmp"
-    # save_to = None
+    test_dir = r"E:\CASIA-V4-Location\test"
+    save_to = None
     filename2path = Utils.getFile2Path(test_dir,suffix="jpg")
     print("[*] size in {0} : {1}".format(test_dir,len(filename2path)))
     for filename in filename2path:
@@ -68,10 +68,10 @@ if __name__ == "__main__":
         try:
             img,rect = predictor.predict(img,pnet_threshold= pnet_threshold)
             rect = Utils.toSquareShape(rect)
-            # Utils.drawRectsAndShow(img,rect)
+            Utils.drawRectsAndShow(img,rect)
             img_crop = Utils.rect_pad_and_crop(img,rect,10)
             if save_to!=None:
                 cv2.imwrite(os.path.join(save_to, filename),img_crop)
-            # Utils.showImage(img_crop)
+            Utils.showImage(img_crop)
         except Exception as e:
             print("[!] filename{0}  exception:{1}".format(filename, e))

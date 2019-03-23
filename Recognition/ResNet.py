@@ -34,6 +34,18 @@ class ResNet:
         self.writer.add_summary(summary_val,global_step)
         return loss, global_step
 
+    def  trainWithClassification(self, batch_input, batch_output,batch_output_ont_hot, learning_rate, cls_weight):
+        _, loss,summary_val , global_step = self.sess.run([self.optimizer, self.loss,self.all_summary,self.global_step],
+                                          feed_dict={self.input: batch_input,
+                                                     self.desired_out: batch_output,
+                                                     self.ont_hot_label : batch_output_ont_hot,
+                                                     self.learning_rate: learning_rate,
+                                                     self.classfication_loss_weight : cls_weight
+                                                     })
+        self.writer.add_summary(summary_val,global_step)
+        return loss, global_step
+        return
+
     def forward(self, batch_input):
         return self.sess.run(self.embed, feed_dict={self.input: batch_input})
 
@@ -224,12 +236,30 @@ class ResNet:
                 self.embed = y/tf.sqrt(tf.reduce_sum(y*y))
                 layers.append(self.embed)
 
+            self.one_hot_output = self.fc(self.embed, config.training_classes, "one_hot_output")
+            self.ont_hot_label = tf.placeholder(tf.float32, [None,config.training_classes], name = "one_hot_label")
+
         self.learning_rate = tf.placeholder(tf.float32, name="learning_rate")
         self.desired_out = tf.placeholder(tf.float32, output_shape, name="desired_out")
         self.global_step = tf.Variable(0, name="global_step", trainable=False)
-        self.loss,_ = TripletLoss.batch_all_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)
+
+        self.l2_loss = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES),name="l2_loss")
+        self.trilet_loss, _ = TripletLoss.batch_all_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)
+        self.loss = self.l2_loss + self.trilet_loss
+
+        if config.classification_loss_weight > 1e-8:
+            ####### 分类loss
+            self.classfication_loss_weight = tf.placeholder(tf.float32,name =  "classfication_loss_weight")
+            self.classfication_loss = self.classfication_loss_weight * \
+                tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits= self.one_hot_output, labels=self.ont_hot_label))
+            tf.summary.scalar("Classification Loss", self.classfication_loss)
+            self.loss += self.classfication_loss
+
+        tf.summary.scalar("L2 Loss",self.l2_loss)
+        tf.summary.scalar("Triplet Loss",self.trilet_loss)
         tf.summary.scalar("Loss", self.loss)
         tf.summary.scalar("Learning Rate", self.learning_rate)
+
         self.all_summary = tf.summary.merge_all()
         # output
         # loss函数

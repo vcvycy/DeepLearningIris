@@ -95,9 +95,9 @@ def showImageWithBBR(image,rect,bbr=[0,0,0,0],copy=True,show=True):
         image = image.copy()
     if len(image.shape) == 2 or image.shape[2] == 1:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-    image = cv2.rectangle(image,(rect[1],rect[0]),(rect[3],rect[2]),color=(0,0,255),thickness=1)
+    # image = cv2.rectangle(image,(rect[1],rect[0]),(rect[3],rect[2]),color=(0,0,255),thickness=1)
     r = bbr_calibrate(rect,bbr)
-    image = cv2.rectangle(image,(r[1],r[0]),(r[3],r[2]),color=(0,255,0),thickness=1)
+    image = cv2.rectangle(image,(r[1],r[0]),(r[3],r[2]),color=(0,255,0),thickness=2)
     if show:
         showImage(image)
     return image
@@ -215,6 +215,30 @@ def rect_pad_and_crop(img,rect,pad=0):
     img = img[rect[0]:rect[2] + 1, rect[1]:rect[3] + 1]
     return img
 
+def getRecallAndPrecision(dist,label, threshold):
+    n =len(label)
+    need_recall_num = 0                  # 所有需要recall 的pair
+    real_recall_num = 0             # 被recall 的个数
+    recall_correct_num = 0         # 被recall，且正确的个数
+    for i in range(n):
+        for j in range(i+1,n):
+            l1 = label[i]
+            l2 = label[j]
+            if l1 == l2:
+                need_recall_num += 1
+            if dist[i][j] <= threshold:
+                real_recall_num += 1
+                if l1 == l2:
+                    recall_correct_num += 1
+    if need_recall_num!=0:
+        recall = recall_correct_num / need_recall_num
+    else:
+        recall =0
+    if real_recall_num!=0:
+        precision = recall_correct_num / real_recall_num
+    else:
+        precision = 0
+    return recall, precision , (recall_correct_num , real_recall_num , need_recall_num)
 if __name__ == "__main__":
     r=(0,0,2,2)
     r2=(1,1,3,3)
