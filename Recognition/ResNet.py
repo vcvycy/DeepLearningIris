@@ -45,7 +45,7 @@ class ResNet:
                                                            self.loss],
                                                           feed_dict={self.input: batch_input,
                                                                      self.desired_out: batch_output,
-                                                                     self.ont_hot_label : batch_output_ont_hot,
+                                                                     self.one_hot_label : batch_output_ont_hot,
                                                                      self.learning_rate: learning_rate,
                                                                      self.classfication_loss_weight : cls_weight
                                                                      })
@@ -254,11 +254,11 @@ class ResNet:
 
         ####### 分类loss
         with tf.variable_scope("ClassificationLayers"):
-            self.one_hot_output = self.fc(self.embed, config.training_classes, "one_hot_output")
-            self.ont_hot_label = tf.placeholder(tf.float32, [None,config.training_classes], name = "one_hot_label")
+            self.one_hot_output = tf.nn.softmax(self.fc(self.embed, config.training_classes, "one_hot_output"))
+            self.one_hot_label = tf.placeholder(tf.float32, [None, config.training_classes], name ="one_hot_label")
             self.classfication_loss_weight = tf.placeholder(tf.float32,name =  "classfication_loss_weight")
             self.classfication_loss = self.classfication_loss_weight * \
-                tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits= self.one_hot_output, labels=self.ont_hot_label))
+                tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits= self.one_hot_output, labels=self.one_hot_label))
 
         self.loss = tf.add_n([self.l2_loss, self.trilet_loss,self.classfication_loss], name = "WeightedLoss")
 
