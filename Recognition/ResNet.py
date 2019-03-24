@@ -195,27 +195,27 @@ class ResNet:
                         layers.append(b)
                 with tf.variable_scope("Residual_Blocks_STACK_1"):
                     x = layers[-1]
+                    b = self.res_block(x, 24, "block_0", True)
+                    layers.append(b)
+                    for id in range(1, stack_n):
+                        x = layers[-1]
+                        b = self.res_block(x, 24, "block_%d" % (id))
+                        layers.append(b)
+                with tf.variable_scope("Residual_Blocks_STACK_2"):
+                    x = layers[-1]
                     b = self.res_block(x, 32, "block_0", True)
                     layers.append(b)
                     for id in range(1, stack_n):
                         x = layers[-1]
                         b = self.res_block(x, 32, "block_%d" % (id))
                         layers.append(b)
-                with tf.variable_scope("Residual_Blocks_STACK_2"):
-                    x = layers[-1]
-                    b = self.res_block(x, 64, "block_0", True)
-                    layers.append(b)
-                    for id in range(1, stack_n):
-                        x = layers[-1]
-                        b = self.res_block(x, 64, "block_%d" % (id))
-                        layers.append(b)
                 with tf.variable_scope("Residual_Blocks_STACK_3"):
                     x = layers[-1]
-                    b = self.res_block(x, 64, "block_0", True)
+                    b = self.res_block(x, 48, "block_0", True)
                     layers.append(b)
                     for id in range(1, stack_n):
                         x = layers[-1]
-                        b = self.res_block(x, 64, "block_%d" % (id))
+                        b = self.res_block(x, 48, "block_%d" % (id))
                         layers.append(b)
                         # maxpool
             """
@@ -223,6 +223,10 @@ class ResNet:
             y=self.max_pool(x,"maxpool_after_resblocks")
             layers.append(y)
             """
+            x = self.ACTIVATE(self.bn(layers[-1],name = "bn_before_compress"))
+
+            y = self.conv(x, "compress", 4, ksize=[3, 3])
+            layers.append(y)
             # (3)卷积层flatten
             with tf.variable_scope("Flatten"):
                 last_layer = layers[-1]
@@ -237,11 +241,9 @@ class ResNet:
             with tf.variable_scope("Embedding"):
                 x = layers[-1]
                 y = self.bn(x)
-                y = self.ACTIVATE(y)
                 y = self.fc(y, 128, "embedding")
                 self.embed = y # /tf.sqrt(tf.reduce_sum(y*y))
                 layers.append(self.embed)
-
 
         self.learning_rate = tf.placeholder(tf.float32, name="learning_rate")
         self.desired_out = tf.placeholder(tf.float32, output_shape, name="desired_out")
