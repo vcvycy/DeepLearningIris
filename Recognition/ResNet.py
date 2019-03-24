@@ -35,7 +35,8 @@ class ResNet:
         return loss, global_step
 
     def  trainWithClassification(self, batch_input, batch_output,batch_output_ont_hot, learning_rate, cls_weight):
-        _, loss,summary_val , global_step, l1,l2,l3,l4 = self.sess.run([self.optimizer,
+        _, cls_accu,loss,summary_val , global_step, l1,l2,l3,l4 = self.sess.run([self.optimizer,
+                                                           self.accuracy,
                                                            self.loss,
                                                            self.all_summary,
                                                            self.global_step,
@@ -49,7 +50,7 @@ class ResNet:
                                                                      self.learning_rate: learning_rate,
                                                                      self.classfication_loss_weight : cls_weight
                                                                      })
-        print("[*]loss = %s  %s  %s  %s" %(l1, l2, l3, l4))
+        print("[*]accu = %s loss = %s  %s  %s  %s " %(cls_accu,l1, l2, l3, l4))
         self.writer.add_summary(summary_val,global_step)
         return loss, global_step
 
@@ -251,19 +252,26 @@ class ResNet:
 
         self.l2_loss = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES),name="l2_loss")
         with tf.variable_scope("TripletLoss"):
-            self.trilet_loss, _ = TripletLoss.batch_all_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)
-
+            if config.use_triplet_loss:
+                self.trilet_loss, _ = TripletLoss.batch_all_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)
+            else:
+                self.trilet_loss = tf.constant(0.0,dtype=tf.float32)
         ####### 分类loss
         with tf.variable_scope("ClassificationLayers"):
             self.one_hot_output = tf.nn.softmax(self.fc(self.embed, config.training_classes, "one_hot_output"))
             self.one_hot_label = tf.placeholder(tf.float32, [None, config.training_classes], name ="one_hot_label")
             self.classfication_loss_weight = tf.placeholder(tf.float32,name =  "classfication_loss_weight")
             self.classfication_loss = self.classfication_loss_weight * (-tf.reduce_mean(self.one_hot_label * tf.log(tf.clip_by_value(self.one_hot_output,1e-10,1.0))))
+            # 准确率
+
+            self.iscorrect = tf.equal(tf.argmax(self.one_hot_label, 1), tf.argmax(self.one_hot_output, 1), name="iscorrect")
+            self.accuracy = tf.reduce_mean(tf.cast(self.iscorrect, dtype=tf.float32), name="accuracy")
             # self.classfication_loss = self.classfication_loss_weight * tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits= self.one_hot_output, labels=self.one_hot_label))
 
         self.loss = tf.add_n([self.l2_loss, self.trilet_loss,self.classfication_loss], name = "WeightedLoss")
 
-        tf.summary.scalar("Classification Loss", self.classfication_loss)
+        tf.summary.scalar("Classfication Accuracy", self.accuracy)
+        tf.summary.scalar("Classfication Loss", self.classfication_loss)
         tf.summary.scalar("L2 Loss",self.l2_loss)
         tf.summary.scalar("Triplet Loss",self.trilet_loss)
         tf.summary.scalar("Loss", self.loss)

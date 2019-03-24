@@ -1,6 +1,7 @@
 {
   "iris_training_images_dir" : "E:/iris_crop",
   "iris_training_images_dir2": "/home/jack/iris_dataset/iris_crop",
+  "use_triplet_loss" : 0,
   "learning_rate" :0.0001,
   "classification_loss_weight": 0.5 ,
   "total_training_steps" : 5000,
