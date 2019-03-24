@@ -61,7 +61,6 @@ class ResNet:
         vars.append(self.global_step)
         return vars
 
-
     def save(self, save_path, steps):
         saver = tf.train.Saver()
         saver.save(self.sess, save_path, global_step=steps)
@@ -103,7 +102,7 @@ class ResNet:
 
     def get_optimizer(self):
         self.optimizer = tf.train.MomentumOptimizer(self.learning_rate, self.config.momemtum).minimize(
-            self.loss,global_step=self.global_step)
+            self.loss, global_step=self.global_step)
 
     # 对x执行一次卷积操作+Relu
     def conv(self, x, name, channels, ksize=[3, 3], strides=[1, 1, 1, 1]):
@@ -240,7 +239,7 @@ class ResNet:
                 y = self.bn(x)
                 y = self.ACTIVATE(y)
                 y = self.fc(y, 128, "embedding")
-                self.embed = y/tf.sqrt(tf.reduce_sum(y*y))
+                self.embed = y # /tf.sqrt(tf.reduce_sum(y*y))
                 layers.append(self.embed)
 
 
@@ -257,8 +256,8 @@ class ResNet:
             self.one_hot_output = tf.nn.softmax(self.fc(self.embed, config.training_classes, "one_hot_output"))
             self.one_hot_label = tf.placeholder(tf.float32, [None, config.training_classes], name ="one_hot_label")
             self.classfication_loss_weight = tf.placeholder(tf.float32,name =  "classfication_loss_weight")
-            self.classfication_loss = self.classfication_loss_weight * \
-                tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits= self.one_hot_output, labels=self.one_hot_label))
+            self.classfication_loss = self.classfication_loss_weight * (-tf.reduce_mean(self.one_hot_label * tf.log(tf.clip_by_value(self.one_hot_output,1e-10,1.0))))
+            # self.classfication_loss = self.classfication_loss_weight * tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits= self.one_hot_output, labels=self.one_hot_label))
 
         self.loss = tf.add_n([self.l2_loss, self.trilet_loss,self.classfication_loss], name = "WeightedLoss")
 
