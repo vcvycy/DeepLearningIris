@@ -243,7 +243,7 @@ class ResNet:
                 x = layers[-1]
                 y = self.bn(x)
                 y = self.fc(y, 128, "embedding")
-                self.embed = y # /tf.sqrt(tf.reduce_sum(y*y))
+                self.embed = tf.nn.l2_normalize(y,1)
                 layers.append(self.embed)
 
         self.learning_rate = tf.placeholder(tf.float32, name="learning_rate")
