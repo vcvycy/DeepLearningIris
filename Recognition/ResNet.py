@@ -258,7 +258,7 @@ class ResNet:
                 self.trilet_loss = tf.constant(0.0,dtype=tf.float32)
         ####### 分类loss
         with tf.variable_scope("ClassificationLayers"):
-            self.one_hot_output = tf.nn.softmax(self.fc(self.embed, config.training_classes, "one_hot_output"))
+            self.one_hot_output = self.fc(self.embed, config.training_classes, "one_hot_output")
             self.one_hot_label = tf.placeholder(tf.float32, [None, config.training_classes], name ="one_hot_label")
             self.classfication_loss_weight = tf.placeholder(tf.float32,name =  "classfication_loss_weight")
             # self.classfication_loss = self.classfication_loss_weight * (-tf.reduce_mean(self.one_hot_label * tf.log(tf.clip_by_value(self.one_hot_output,1e-10,1.0))))
