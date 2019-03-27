@@ -6,13 +6,17 @@ import os
 import random
 
 # 枚举root,返回所有jpg文件，文件名->路径的映射的dict
-def getFile2Path(root,suffix="jpg"):
+def getFile2Path(root,suffix="jpg|bmp"):
+    suffix_set = set(suffix.split("|"))
     filename2path = {}
     for r,dirs,files in os.walk(root):
         for file in files:
-            if file.split(".")[-1] == suffix:
+            if file.split(".")[-1] in suffix_set:
                 filename2path[file] = os.path.join(r,file)
     return filename2path
+# 获取文件扩展名
+def getExt(filename):
+    return filename.split(".")[-1]
 
 def showImage(mat,name=None):
     if name==None:

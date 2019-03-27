@@ -17,9 +17,9 @@ class DSV4Recog(DSIris):
                  steps,
                  input_size ,
                  crop_pixels ,
-                 batch_img_num_each_class =5,
-                 batch_class_num=8,
-                 training_classes =2000):
+                 batch_img_num_each_class ,
+                 batch_class_num,
+                 training_classes ):
         super().__init__(sess)
         self.input_size = input_size
         self.crop_pixels = crop_pixels
@@ -27,9 +27,9 @@ class DSV4Recog(DSIris):
         self.batch_P = batch_class_num    # 每一个mini_batch，有batch_P个类别
         self.training_classes = training_classes
         # (*) 获取所有文件名列表.
-        self.filename2path = Utils.getFile2Path(image_dir,"jpg")
+        self.filename2path = Utils.getFile2Path(image_dir,"jpg|bmp")
         print("[*] 原始图片个数:{0}".format(len(self.filename2path)))
-        label2files=[[] for i in range(2000)]
+        label2files=[[] for i in range(training_classes)]
         for filename in self.filename2path:
             label = self.__getLabelFromFilename(filename)
             label2files[label].append(filename)
@@ -40,11 +40,13 @@ class DSV4Recog(DSIris):
             label = random.randint(0,self.training_classes-1)
             # assert len(label2files[label])==10 ,"error"
             # 类label的10张图片中，随机选取batch_K 张( 生成0~9的 随机排列，然后取前batch_K张)
-            idx_choosed = [i for i in range(10)]
-            for i in range(1,10):
+            image_num_in_cur_label = len(label2files[label])
+            # 随机生成排列
+            idx_choosed = [i for i in range(image_num_in_cur_label)]
+            for i in range(1,image_num_in_cur_label):
                 x = random.randint(0,i-1)
                 idx_choosed[i],idx_choosed[x] = idx_choosed[x],idx_choosed[i]
-            for i in range(self.batch_K):
+            for i in range(min(self.batch_K, image_num_in_cur_label)):
                 filename = label2files[label][idx_choosed[i]]
                 self.images_path.append(self.filename2path[filename])
 

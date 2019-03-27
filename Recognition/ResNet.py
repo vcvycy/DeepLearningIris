@@ -266,7 +266,7 @@ class ResNet:
 
             self.iscorrect = tf.equal(tf.argmax(self.one_hot_label, 1), tf.argmax(self.one_hot_output, 1), name="iscorrect")
             self.accuracy = tf.reduce_mean(tf.cast(self.iscorrect, dtype=tf.float32), name="accuracy")
-            seslf.classfication_loss = self.classfication_loss_weight * tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits= self.one_hot_output, labels=self.one_hot_label))
+            self.classfication_loss = self.classfication_loss_weight * tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits= self.one_hot_output, labels=self.one_hot_label))
 
         self.loss = tf.add_n([self.l2_loss, self.trilet_loss,self.classfication_loss], name = "WeightedLoss")
 
