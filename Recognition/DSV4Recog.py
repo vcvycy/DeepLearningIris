@@ -51,7 +51,7 @@ class DSV4Recog(DSIris):
                 self.images_path.append(self.filename2path[filename])
 
         # (*) 生成Tensorflow队列
-        super().createTFQueue(shuffle=False)
+        super().createTFQueue(shuffle=False,decode_image= False)
         # (*) 显示数据集状态
         self.showDetail()
         return
@@ -87,8 +87,9 @@ class DSV4Recog(DSIris):
             # 原始图片和位置
             filename = os.path.basename(item[0])
             label = self.__getLabelFromFilename(filename)
-            img_origin = item[1]
-
+            # img_origin = item[1]
+            nparr = np.fromstring(item[1], np.uint8)
+            img_origin = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
             # 先缩放到 size* size 再在高和宽各减去self.crop_pixels个像素
             size = self.input_size + self.crop_pixels
             img_origin = cv2.resize(img_origin,(size, size), interpolation=cv2.INTER_CUBIC)
