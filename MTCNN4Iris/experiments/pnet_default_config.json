@@ -1,9 +1,9 @@
 {
   "iris_position_json_file":"E:/CASIA-V4-Location/Iris_Pupil_Position.json",
   "iris_images_dir" : "E:/CASIA-V4-Location/train",
-  "iris_images_test" : "E:/CASIA-V4-Location/train",
+  "iris_images_test" : "E:/CASIA-V4-Location/test",
   "focal_loss_lambda" : 2,
-  "bbr_loss_weight" : 0.5,
+  "bbr_loss_weight" : 1,
   "pos_iou" :0.7,
   "neg_iou": 0.3,
   "min_rect_region_size" : 100,

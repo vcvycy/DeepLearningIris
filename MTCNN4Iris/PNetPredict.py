@@ -21,7 +21,7 @@ class PNetPredictor():
             print("[!] 无法restore")
             exit(0)
 
-    # 处理一张图片经过Pnet后的输出，返回rect, prob,bbr  四元组列表
+    # 处理一张图片经过Pnet后的输出，返回rect, prob,bbr  三元组列表
     def parsePNetOutput(self,prob,bbr, scale, pnet_threshold ):
         rects_prob_bbr = []
         h,w = prob.shape[:2]
@@ -37,7 +37,7 @@ class PNetPredictor():
                     rects_prob_bbr.append((rect,prob[x][y][1], bbr[x][y]))
         return rects_prob_bbr
 
-    def predict(self,img ,threshold,min_size=0):
+    def predict(self,img ,threshold,min_size=0, nms_threshold =0.7):
         if len(img.shape) == 2:
             h, w = img.shape
             img = np.reshape(img, (h, w, 1))
@@ -53,26 +53,31 @@ class PNetPredictor():
                 r = item[0]
                 if r[2]-r[0] > min_size:
                     results.append(item)
+                # print(item[2])
 
         # nms
         rects_bbr = [Utils.bbr_calibrate(item[0],item[2]) for item in results]
         probs = [item[1] for item in results]
-        is_remained = Utils.nms(rects_bbr, probs, iou_threshold= 0.7, method= "Union")
+        is_remained = Utils.nms(rects_bbr, probs, iou_threshold= nms_threshold, method= "Union")
 
         rst_nms = []
         for i in range(len(results)):
             if is_remained[i]:
                 rst_nms.append(results[i])
-        # print("%d -> %d" %(len(results),len(rst_nms)))
         # 返回bbr 后的rects
         shape = img.shape
-        calibrated_rects = [Utils.bbr_calibrate(item[0],item[2],shape) for item in rst_nms]
+        calibrated_rects=[]
+        for item in rst_nms:
+            r = Utils.bbr_calibrate(item[0], item[2], shape)
+            if r[2]-r[0] > min_size and r[3]-r[1] > min_size:
+                calibrated_rects.append(r)
         return calibrated_rects
 
 
 if __name__ == "__main__":
     # 运行目录
-    experiment_dir = "experiments/pnet1"
+    # experiment_dir = "experiments/pnet1"
+    experiment_dir = "experiments/pnet_expand_0.08"
     config = Config.Config(os.path.join(experiment_dir,"config.json"))
     config.show()
     sess = tf.Session()

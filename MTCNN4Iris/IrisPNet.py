@@ -52,6 +52,7 @@ class IrisPNet():
                 # summary - tf board - init
                 tf.summary.scalar("Loss",self.loss)
                 tf.summary.scalar("Learning Rate", self.learning_rate)
+                tf.summary.scalar("L2 Loss", self.l2_loss)
                 self.all_summary = tf.summary.merge_all()
                 self.writer = tf.summary.FileWriter(os.path.join(self.experiment_dir,"tboard"), self.sess.graph)
             return

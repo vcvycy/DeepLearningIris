@@ -147,7 +147,9 @@ def v4locationAug(img , loc, crop_size = (24, 64), scale=2):
     # Utils.drawIrisAndShow(img, loc)
     return img,loc
 
+from copy import deepcopy
 def v4MTCNNAug(img, loc):
+    loc = deepcopy(loc)           # 防止label值被修改
     # 虹膜/瞳孔位置
     iris = loc["iris"]
     pupil = loc["pupil"]
@@ -180,6 +182,22 @@ def v4MTCNNAug(img, loc):
     # Utils.drawIrisAndShow(img, loc)
     return img,loc
 
+def onet_with_proposal_aug(img):
+    # 虹膜/瞳孔位置
+    # 白块(模拟反光)
+    drawRandomCircle(img, (1, 3), (0, 2), color_range=(230, 255))
+    drawRandomCircle(img,(1,7),(0,1),color_range=(250,255))
+
+    # 翻转+模糊+crop
+    seq = iaa.Sequential([
+        iaa.OneOf([
+            iaa.GaussianBlur((0, 3.0)),
+            iaa.AverageBlur(k=(2, 3)),
+            iaa.MedianBlur(k=(3, 7)),
+        ])
+    ])
+    img = seq.augment_image(img)
+    return  img
 ###### TEST #########
 if __name__ == "__main__":
     while True:

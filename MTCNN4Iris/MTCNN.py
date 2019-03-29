@@ -40,7 +40,8 @@ def layer(op):
 
 class Network(object):
 
-    def __init__(self, inputs, l2_lambda = 0, trainable=True):
+    def __init__(self, inputs, l2_lambda = 0, trainable=True,use_pupil_loc= False):
+        self.use_pupil_loc=use_pupil_loc
         # The input nodes for this network
         self.inputs = inputs
         # The current list of terminal nodes
@@ -269,6 +270,13 @@ def bbrLoss(pos_label, bbr_label, bbr_predict):
     loss = tf.reduce_sum(loss * pos_label)
     return loss
 
+def pupilLoss(pos_label, label, predict):
+    # [None] 每个样本的loss 值
+    loss = tf.sqrt(tf.reduce_sum(tf.square(label - predict), axis=1))
+    # 只保留Postive样本的loss值
+    loss = tf.reduce_sum(loss * pos_label)
+    return loss
+
 class ONet(Network):
     def setup(self):
         (self.feed('input')  # pylint: disable=no-value-for-parameter, no-member
@@ -294,10 +302,9 @@ class ONet(Network):
 
         (self.feed('prelu5')  # pylint: disable=no-value-for-parameter
          .fc(4, relu=False, name='conv6-2'))
-        """
-        (self.feed('prelu5')  # pylint: disable=no-value-for-parameter
-         .fc(10, relu=False, name='conv6-3'))
-        """
+        if self.use_pupil_loc:
+            (self.feed('prelu5')  # pylint: disable=no-value-for-parameter
+             .fc(4, relu=False, name='conv6-3'))
 
 
 

@@ -106,6 +106,18 @@ def showImageWithBBR(image,rect,bbr=[0,0,0,0],copy=True,show=True):
         showImage(image)
     return image
 
+# 画出pupil，其是按百分比表示的
+def drawPupilPercent(img, pupil):
+    h,w = img.shape[:2]
+    p = (
+        int(h*pupil[0]),
+        int(w*pupil[1]),
+        int(h*pupil[2]),
+        int(w*pupil[3])
+    )
+    drawRectsAndShow(img,p)
+    return
+
 # 在图中画多个矩形
 def drawRectsAndShow(img,*rects):
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
@@ -127,6 +139,15 @@ def rndColor():
     r = random.randint(0,255)
     return (b,g,r)
 
+def shrinkRect(rect, share=0.08):
+    h,w = rect[2]-rect[0], rect[3]-rect[1]
+    pad = int(h* share)
+    return (
+        rect[0]+pad,
+        rect[1]+pad,
+        rect[2]-pad,
+        rect[3]-pad
+    )
 
 def drawRectsListAndShow(img,rects):
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
@@ -153,6 +174,17 @@ def getIrisRectFromPosition(pos,shape=None):
     else:
         h ,w = shape[:2]
         return max(x-r,0), max(y-r,0), min(x+r, h-1),min(y+r, w-1)
+def getPupilRectFromPosition(pos, shape=None):
+    pupil = pos["pupil"]
+    x = pupil["c"][1]
+    y = pupil["c"][0]
+    r = pupil["r"]
+    if shape== None:
+        return x-r, y-r ,x+r, y+r
+    else:
+        h ,w = shape[:2]
+        return max(x-r,0), max(y-r,0), min(x+r, h-1),min(y+r, w-1)
+
 
 # Non - Maximum- Suppression , 返回一个列表，true表示保留下来，false表示被删除
 def nms(rects, probs, iou_threshold, method):  # method : Union/Min
@@ -216,6 +248,7 @@ def rect_pad_and_crop(img,rect,pad=0):
     rect[2] += pad_right_bottom
     rect[3] += pad_right_bottom
     #
+    print(rect)
     img = img[rect[0]:rect[2] + 1, rect[1]:rect[3] + 1]
     return img
 
@@ -243,6 +276,16 @@ def getRecallAndPrecision(dist,label, threshold):
     else:
         precision = 0
     return recall, precision , (recall_correct_num , real_recall_num , need_recall_num)
+
+def getBBR(predict,label):
+    rh = predict[2] - predict[0]
+    rw = predict[3] - predict[1]
+    return (
+        (label[0] - predict[0]) / rh,
+        (label[1] - predict[1]) / rw,
+        (label[2] - predict[2]) / rh,
+        (label[3] - predict[3]) / rw
+    )
 if __name__ == "__main__":
     r=(0,0,2,2)
     r2=(1,1,3,3)

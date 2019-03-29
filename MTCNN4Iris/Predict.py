@@ -49,16 +49,19 @@ class Predictor:
         # Utils.showImageWithBBR(img, final[1], final[2])
         rect = Utils.bbr_calibrate(final[1],final[2])
         return img,rect
+
 if __name__ == "__main__":
     # 运行目录
-    pnet_dir = "experiments/pnet1"
-    onet_dir = "experiments/onet_neg_15"
+    #pnet_dir = "experiments/pnet1"
+    pnet_dir = "experiments/pnet_expand_0.08"
+    #onet_dir = "experiments/onet_neg_15_pupil"
+    onet_dir = "experiments/onet_with_proposal"
     predictor = Predictor(pnet_dir, onet_dir)
     pnet_threshold = 0.3
     # 数据集
-    test_dir = r"E:\IrisDataset\CASIA-Iris-Thousand"
-    save_to  = r"e:\iris_crop"
-    test_dir = r"E:\CASIA-V4-Location\test"
+    # test_dir = r"E:\IrisDataset\CASIA-Iris-Thousand"
+    # save_to  = r"e:\iris_crop"
+    test_dir = r"E:\CASIA-V4-Location\tmp"
     save_to = None
     filename2path = Utils.getFile2Path(test_dir,suffix="jpg")
     print("[*] size in {0} : {1}".format(test_dir,len(filename2path)))
@@ -69,9 +72,9 @@ if __name__ == "__main__":
             img,rect = predictor.predict(img,pnet_threshold= pnet_threshold)
             rect = Utils.toSquareShape(rect)
             Utils.drawRectsAndShow(img,rect)
-            img_crop = Utils.rect_pad_and_crop(img,rect,10)
             if save_to!=None:
+                img_crop = Utils.rect_pad_and_crop(img,rect,10)
                 cv2.imwrite(os.path.join(save_to, filename),img_crop)
-            Utils.showImage(img_crop)
         except Exception as e:
             print("[!] filename{0}  exception:{1}".format(filename, e))
+            input("")
