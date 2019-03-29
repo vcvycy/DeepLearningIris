@@ -3,7 +3,8 @@ import os
 sys.path.append(os.path.join(os.getcwd(),".."))
 sys.path.append(os.getcwd())
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+from Recognition.TripletSelection import TripletSelection
 import tensorflow as tf
 from Recognition import ResNet
 from Recognition import  DSV4Recog
@@ -26,7 +27,7 @@ def toOneHot(label, classes):
 if __name__ == "__main__":
     # 读取训练存放目录；已经目录中的配置文件
     parser = argparse.ArgumentParser()
-    parser.add_argument("--training_dir",default="test")
+    parser.add_argument("--training_dir",default="TripletSelection")
     cmd_args = parser.parse_args()
 
     # 模型地址
@@ -48,18 +49,11 @@ if __name__ == "__main__":
         print("[*] restore失败")
 
     # 数据集
-    ds = DSV4Recog.DSV4Recog(sess,
-                             config.iris_training_images_dir,
-                             steps= min(201000,config.total_training_steps),
-                             input_size= config.input_size,
-                             crop_pixels= config.crop_each_side,
-                             batch_img_num_each_class= config.batch_img_num_each_class,
-                             batch_class_num= config.batch_class_num,
-                             training_classes= config.training_classes
-                             )
+    ds = TripletSelection(config.iris_training_images_dir, config.training_classes)
+
     # 开始训练
     while True:
-        batch = ds.getBatch()
+        batch = ds.getBatch(config.batch_class_num, config.batch_img_num_each_class)
         loss,cur_step = resnet.trainWithClassification(batch_input = batch[0],
                                                        batch_output = batch[1],
                                                        batch_output_ont_hot= toOneHot(batch[1],config.training_classes),

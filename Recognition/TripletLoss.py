@@ -158,7 +158,7 @@ def batch_all_triplet_loss(labels, embeddings, margin, squared=False):
 
     # Put to zero the invalid triplets
     # (where label(a) != label(p) or label(n) == label(a) or a == p)
-    mask = _get_triplet_mask(labels)             # mask(n*n*n) ，当且仅当 label(a)=label(p)!=label(n) 且a!=p时，mask = True
+    mask = _get_triplet_mask(labels)             # mask(n*n*n) ，当且仅当 label(a)=label(p)!=label(n) 且a!=p时，mask = True mask[a,p,n]=1
     mask = tf.to_float(mask)
     triplet_loss = tf.multiply(mask, triplet_loss)
 

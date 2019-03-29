@@ -47,6 +47,7 @@ if __name__ == "__main__":
                              )
 
 
+
     # 开始训练
     while True:
         batch = ds.getBatch()

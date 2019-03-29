@@ -20,13 +20,14 @@ def getLabelFromFilename( filename):
 if __name__ == "__main__":
     # 读取训练存放目录；已经目录中的配置文件
     parser = argparse.ArgumentParser()
-    parser.add_argument("--training_dir",default="test")
+    parser.add_argument("--training_dir",default="with_classfication")
     cmd_args = parser.parse_args()
 
     # 模型地址
     train_on_dir = os.path.join("./experiments",cmd_args.training_dir)
     # 配置文件
     config_path = os.path.join(train_on_dir,"config.json")
+    print(config_path)
     config = Config(config_path)
     config.show()
 
@@ -37,11 +38,12 @@ if __name__ == "__main__":
     print("[*]网络参数%d" %(resnet.param_num))
     # restore
     resnet.restore_embedding(os.path.join(os.path.join(train_on_dir, "model")))
-
+    # 读取所有文件和文件对应的label值
     filename2path = Utils.getFile2Path(r"E:\iris_recog_test")
     path_list = [filename2path[f] for f in filename2path]
     labels = [getLabelFromFilename(f) for f in filename2path]
     n = len(path_list)
+    print("[*] 测试文件个数:%s" %(n))
     dim = 128
     embeds = []
     for i in range(n):
@@ -59,7 +61,9 @@ if __name__ == "__main__":
     e1 = np.reshape(embeds,(n,1,dim))
     e2 = np.reshape(embeds,(1,n,dim))
     dist = np.sqrt(np.sum((e1-e2)*(e1-e2), 2))
-    threshold = 0.2
+
+    #
+    threshold = 0.42
     recall, precision, x = Utils.getRecallAndPrecision(dist,labels, threshold)
     print("[*] recall {0} ({1}/{2})".format(recall, x[0],x[2]))
     print("[*] precision {0} ({1}/{2})".format(precision, x[0],x[1]))
@@ -76,6 +80,8 @@ if __name__ == "__main__":
                 FRR += 1
             if dist[i][j] <= threshold and labeli!= labelj:
                 FAR += 1
+            # print(" label %s -> %s dist=%s" %(labeli, labelj, dist[i][j]))
+            # input("")
 
     print("[*]FAR ={0}/{1}  {2}".format(FAR, total, FAR / total))
     print("[*]FRR ={0}/{1}  {2}".format(FRR, total, FRR / total))

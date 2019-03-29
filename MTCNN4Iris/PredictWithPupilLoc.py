@@ -30,7 +30,7 @@ class Predictor:
 
     def predict(self,img, pnet_threshold):
         # Pnet
-        rects = self.pnet_predictor.predict(img, threshold = pnet_threshold,min_size=150, nms_threshold= 0.7)
+        rects = self.pnet_predictor.predict(img, threshold = pnet_threshold,min_size=150, nms_threshold= 0.75)
         if len(rects) == 0:
             rects =  self.pnet_predictor.predict(img, threshold = 0.2)
         if len(rects) == 0:
@@ -89,16 +89,16 @@ if __name__ == "__main__":
         pupil_rect = Utils.toSquareShape(pupil_rect)
         pupil_shrink_pixels = max(0, (pupil_rect[2]-pupil_rect[0]-8)//2)
         px, py , pr = (pupil_rect[2]+pupil_rect[0])//2 , (pupil_rect[3]+pupil_rect[1])//2 , max(0,(pupil_rect[2]-pupil_rect[0])//2-15)
-        img_shrink = PupilShrink.shrink_pupil_in_irisimage(iris_image, px, py, pr)
 
         if save_to!=None:
-            pupil_position_json[filename] = pupil_rect
+            pupil_position_json[filename] = {"iris":iris_rect, "pupil":pupil_rect}
             cv2.imwrite(os.path.join(save_to, filename), iris_image)
         else:
             # 在瞳孔中画虹膜
             Utils.drawPupilPercent(iris_image,pupil_percent)
+            img_shrink = PupilShrink.shrink_pupil_in_irisimage(iris_image, px, py, pr)
             Utils.showImage(img_shrink)
-        break
+        #break
     # 保存瞳孔信息
     f_pupil = open(os.path.join(save_to,"pupil.json"),"w")
     f_pupil.write(json.dumps(pupil_position_json))
