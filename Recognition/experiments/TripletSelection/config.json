@@ -5,7 +5,7 @@
   "iris_training_images_dir2": "/home/jack/iris_dataset/segmented_iris",
   "use_triplet_loss" : 1,
   "learning_rate" :0.045,
-  "classification_loss_weight": 0.3 ,
+  "classification_loss_weight": 0.1 ,
   "save_every_steps" : 5000,
   "training_classes": 2000,
   "input_size":200,
@@ -15,5 +15,7 @@
   "batch_img_num_each_class": 5,
   "batch_class_num" : 16,
   "resnet_stack_n" : 1,
-  "triplet_loss_margin" : 0.5
+  "triplet_loss_margin" : 0.5,
+  "batch_all_weight" :1,
+  "batch_hard_weight": 0
 }

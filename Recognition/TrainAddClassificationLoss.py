@@ -58,7 +58,9 @@ if __name__ == "__main__":
                                                        batch_output = batch[1],
                                                        batch_output_ont_hot= toOneHot(batch[1],config.training_classes),
                                                        learning_rate= config.learning_rate,
-                                                       cls_weight=  config.classification_loss_weight
+                                                       cls_weight=  config.classification_loss_weight,
+                                                       batch_all_weight= config.batch_all_weight,
+                                                       batch_hard_weight = config.batch_hard_weight
                                                         )
         print("[*] Step[{0}] loss{1} ".format(cur_step,loss))
 

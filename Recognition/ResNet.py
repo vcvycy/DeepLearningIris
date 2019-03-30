@@ -34,7 +34,9 @@ class ResNet:
         self.writer.add_summary(summary_val,global_step)
         return loss, global_step
 
-    def  trainWithClassification(self, batch_input, batch_output,batch_output_ont_hot, learning_rate, cls_weight):
+    def  trainWithClassification(self, batch_input, batch_output,batch_output_ont_hot, learning_rate, cls_weight,
+                                 batch_all_weight=1,
+                                 batch_hard_weight=0):
         _, cls_accu,loss,summary_val , global_step, l1,l2,l3,l4 = self.sess.run([self.optimizer,
                                                            self.accuracy,
                                                            self.loss,
@@ -48,7 +50,9 @@ class ResNet:
                                                                      self.desired_out: batch_output,
                                                                      self.one_hot_label : batch_output_ont_hot,
                                                                      self.learning_rate: learning_rate,
-                                                                     self.classfication_loss_weight : cls_weight
+                                                                     self.classfication_loss_weight : cls_weight,
+                                                                     self.batch_all_loss_weight : batch_all_weight,
+                                                                     self.batch_hard_loss_weight : batch_hard_weight
                                                                      })
         print("[*]accu = %s loss = %s  %s  %s  %s " %(cls_accu,l1, l2, l3, l4))
         self.writer.add_summary(summary_val,global_step)
@@ -249,13 +253,18 @@ class ResNet:
         self.learning_rate = tf.placeholder(tf.float32, name="learning_rate")
         self.desired_out = tf.placeholder(tf.float32, output_shape, name="desired_out")
         self.global_step = tf.Variable(0, name="global_step", trainable=False)
+        self.batch_all_loss_weight = tf.placeholder(tf.float32, name="batch_all_weight")
+        self.batch_hard_loss_weight = tf.placeholder(tf.float32, name="batch_hard_weight")
 
         self.l2_loss = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES),name="l2_loss")
         with tf.variable_scope("TripletLoss"):
             if config.use_triplet_loss:
-                self.trilet_loss, _ = TripletLoss.batch_all_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)
+                self.batch_all_loss = self.batch_all_loss_weight * TripletLoss.batch_all_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)[0]
+                self.batch_hard_loss = self.batch_hard_loss_weight * TripletLoss.batch_hard_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)
+                self.trilet_loss = self.batch_all_loss + self.batch_hard_loss
             else:
-                self.trilet_loss = tf.constant(0.0,dtype=tf.float32)
+                self.trilet_loss = tf.constant(0.0, dtype=tf.float32)
+
         ####### 分类loss
         with tf.variable_scope("ClassificationLayers"):
             self.one_hot_output = self.fc(self.embed, config.training_classes, "one_hot_output")
@@ -273,6 +282,8 @@ class ResNet:
         tf.summary.scalar("Classfication Accuracy", self.accuracy)
         tf.summary.scalar("Classfication Loss", self.classfication_loss)
         tf.summary.scalar("L2 Loss",self.l2_loss)
+        tf.summary.scalar("Batch All Loss", self.batch_all_loss)
+        tf.summary.scalar("Batch Hard Loss", self.batch_hard_loss)
         tf.summary.scalar("Triplet Loss",self.trilet_loss)
         tf.summary.scalar("Loss", self.loss)
         tf.summary.scalar("Learning Rate", self.learning_rate)
