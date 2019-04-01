@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.join(os.getcwd(),".."))
 sys.path.append(os.getcwd())
 import tensorflow as tf
-from Recognition import ResNet
+from Recognition import ResNetFCN
 from Recognition import  DSV4Recog
 from Config import Config
 import argparse
@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     sess = tf.Session()
     #网络
-    resnet=ResNet.ResNet(sess, config,os.path.join(train_on_dir,"tboard"))
+    resnet=ResNetFCN.ResNet(sess, config, os.path.join(train_on_dir, "tboard"))
     print("[*]网络参数%d" %(resnet.param_num))
     # restore
     resnet.restore_embedding(os.path.join(os.path.join(train_on_dir, "model")))

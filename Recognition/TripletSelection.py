@@ -49,24 +49,25 @@ class TripletSelection:
         return images_path
 
     # 读取+图片增强
-    def readImageAndAug(self,path):
+    def readImageAndAug(self,path,input_size):
         img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
         # 先缩放到 size* size 再在高和宽各减去self.crop_pixels个像素
-        size = 200+10
+        crop_pad = int(input_size*0.05)
+        size = input_size +crop_pad
         img = cv2.resize(img, (size, size), interpolation=cv2.INTER_CUBIC)
         img = np.reshape(img, (size, size, 1))
         #
-        crop_start_h = random.randint(0,9)
-        crop_start_w = random.randint(0,9)
+        crop_start_h = random.randint(0,crop_pad-1)
+        crop_start_w = random.randint(0,crop_pad-1)
 
-        img = img[crop_start_h: crop_start_h + 200, crop_start_w: 200 + crop_start_w]
+        img = img[crop_start_h: crop_start_h + input_size, crop_start_w: input_size + crop_start_w]
         return img
 
-    def getBatch(self, classes_each_batch=16, images_each_class = 5):
+    def getBatch(self, input_size, classes_each_batch=16, images_each_class = 5):
         paths = self.getTripletName(classes_each_batch, images_each_class)
         batch = [[],[],[]]
         for p in paths:
-            img = self.readImageAndAug(p)
+            img = self.readImageAndAug(p, input_size)
             label = self.__getLabelFromFilename(os.path.basename(p))
             batch[0].append(img)
             batch[1].append(label)

@@ -34,7 +34,8 @@ class ResNet:
         self.writer.add_summary(summary_val,global_step)
         return loss, global_step
 
-    def  trainWithClassification(self, batch_input, batch_output,batch_output_ont_hot, learning_rate, cls_weight,
+    def  trainWithClassification(self, batch_input, batch_output,batch_output_ont_hot, learning_rate,
+                                 cls_weight,
                                  batch_all_weight=1,
                                  batch_hard_weight=0):
         _, cls_accu,loss,summary_val , global_step, l1,l2,l3,l4 = self.sess.run([self.optimizer,
@@ -170,6 +171,8 @@ class ResNet:
                 y = tf.add(x, y)
             return y
 
+
+
     def __init__(self,sess, config, tboard_dir):  #
         self.config = config
         input_shape = [None,config.input_size,config.input_size,1]
@@ -216,11 +219,11 @@ class ResNet:
                         layers.append(b)
                 with tf.variable_scope("Residual_Blocks_STACK_3"):
                     x = layers[-1]
-                    b = self.res_block(x, 48, "block_0", True)
+                    b = self.res_block(x, 32, "block_0", True)
                     layers.append(b)
                     for id in range(1, stack_n):
                         x = layers[-1]
-                        b = self.res_block(x, 48, "block_%d" % (id))
+                        b = self.res_block(x, 32, "block_%d" % (id))
                         layers.append(b)
                         # maxpool
             """
@@ -246,7 +249,7 @@ class ResNet:
             with tf.variable_scope("Embedding"):
                 x = layers[-1]
                 y = self.bn(x)
-                y = self.fc(y, 128, "embedding")
+                y = self.fc(y, config.dims, "embedding")
                 self.embed = tf.nn.l2_normalize(y,1)
                 layers.append(self.embed)
 
@@ -259,9 +262,9 @@ class ResNet:
         self.l2_loss = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES),name="l2_loss")
         with tf.variable_scope("TripletLoss"):
             if config.use_triplet_loss:
-                self.batch_all_loss = self.batch_all_loss_weight * TripletLoss.batch_all_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)[0]
-                self.batch_hard_loss = self.batch_hard_loss_weight * TripletLoss.batch_hard_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)
-                self.trilet_loss = self.batch_all_loss + self.batch_hard_loss
+                self.batch_all_loss =  TripletLoss.batch_all_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)[0]
+                self.batch_hard_loss =  TripletLoss.batch_hard_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)
+                self.trilet_loss = self.batch_all_loss_weight * self.batch_all_loss + self.batch_hard_loss_weight * self.batch_hard_loss
             else:
                 self.trilet_loss = tf.constant(0.0, dtype=tf.float32)
 
@@ -287,7 +290,6 @@ class ResNet:
         tf.summary.scalar("Triplet Loss",self.trilet_loss)
         tf.summary.scalar("Loss", self.loss)
         tf.summary.scalar("Learning Rate", self.learning_rate)
-
         self.all_summary = tf.summary.merge_all()
         # output
         # loss函数

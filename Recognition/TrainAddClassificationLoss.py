@@ -5,8 +5,9 @@ sys.path.append(os.getcwd())
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 from Recognition.TripletSelection import TripletSelection
+from Recognition import RecogTest
 import tensorflow as tf
-from Recognition import ResNet
+from Recognition import ResNetFCN
 from Recognition import  DSV4Recog
 from Config import Config
 import argparse
@@ -27,7 +28,7 @@ def toOneHot(label, classes):
 if __name__ == "__main__":
     # 读取训练存放目录；已经目录中的配置文件
     parser = argparse.ArgumentParser()
-    parser.add_argument("--training_dir",default="TripletSelection")
+    parser.add_argument("--training_dir",default="FCN")
     cmd_args = parser.parse_args()
 
     # 模型地址
@@ -37,10 +38,9 @@ if __name__ == "__main__":
     config = Config(config_path)
     config.show()
 
-
     sess = tf.Session()
     #网络
-    resnet=ResNet.ResNet(sess, config,os.path.join(train_on_dir,"tboard"))
+    resnet=ResNetFCN.ResNet(sess, config, os.path.join(train_on_dir, "tboard"))
     print("[*]网络参数%d" %(resnet.param_num))
     # restore
     try:
@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     # 开始训练
     while True:
-        batch = ds.getBatch(config.batch_class_num, config.batch_img_num_each_class)
+        batch = ds.getBatch(config.input_size, config.batch_class_num, config.batch_img_num_each_class)
         loss,cur_step = resnet.trainWithClassification(batch_input = batch[0],
                                                        batch_output = batch[1],
                                                        batch_output_ont_hot= toOneHot(batch[1],config.training_classes),
@@ -67,6 +67,8 @@ if __name__ == "__main__":
         # 每隔 save_every_steps ，保存一次模型
         if cur_step % config.save_every_steps == 0:
             resnet.save_embedding(os.path.join(train_on_dir,"model/at_step"), cur_step)
+            print("[*] 测试精度:%s" %(config.test_dir))
+            print("[*] %s" %(RecogTest.getModelFARFRR(resnet,config.test_dir, config)))
 
         # resnet.save_embedding(os.path.join(train_on_dir,"model/at_step"), cur_step)
         # 更新配置
