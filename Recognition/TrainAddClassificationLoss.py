@@ -2,8 +2,6 @@ import sys
 import os
 sys.path.append(os.path.join(os.getcwd(),".."))
 sys.path.append(os.getcwd())
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-# os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 from Recognition.TripletSelection import TripletSelection
 from Recognition import RecogTest
 import tensorflow as tf
@@ -29,8 +27,11 @@ if __name__ == "__main__":
     # 读取训练存放目录；已经目录中的配置文件
     parser = argparse.ArgumentParser()
     parser.add_argument("--training_dir",default="FCN")
+    parser.add_argument("--gpu")
     cmd_args = parser.parse_args()
 
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"] = cmd_args.gpu
     # 模型地址
     train_on_dir = os.path.join("./experiments",cmd_args.training_dir)
     # 配置文件
