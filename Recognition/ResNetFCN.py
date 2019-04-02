@@ -219,23 +219,12 @@ class ResNet:
                         layers.append(b)
                 with tf.variable_scope("Residual_Blocks_STACK_3"):
                     x = layers[-1]
-                    b = self.res_block(x, 48, "block_0", True)
+                    b = self.res_block(x, 16, "block_0", True)
                     layers.append(b)
                     for id in range(1, stack_n):
                         x = layers[-1]
-                        b = self.res_block(x, 48, "block_%d" % (id))
+                        b = self.res_block(x, 16, "block_%d" % (id))
                         layers.append(b)
-                        # maxpool
-
-                        # (3)卷积层flatten
-                        with tf.variable_scope("Flatten"):
-                            last_layer = layers[-1]
-                            last_shape = last_layer.get_shape()
-                            neu_num = 1
-                            for dim in range(1, len(last_shape)):
-                                neu_num *= last_shape[dim].value
-                            flat_layer = tf.reshape(last_layer, [-1, neu_num], name="flatten")
-                            layers.append(flat_layer)
 
             # (4)embedding 层
             with tf.variable_scope("Embedding"):
@@ -258,7 +247,7 @@ class ResNet:
                 self.batch_hard_loss =  TripletLoss.batch_hard_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)
                 self.trilet_loss = self.batch_all_loss_weight * self.batch_all_loss + self.batch_hard_loss_weight * self.batch_hard_loss
             else:
-                self.trilet_loss = tf.constant(0.0, dtype=tf.float32)
+                self.xtrilet_loss = tf.constant(0.0, dtype=tf.float32)
 
         ####### 分类loss
         with tf.variable_scope("ClassificationLayers"):
