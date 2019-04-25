@@ -45,7 +45,7 @@ def getImagePyramidByPupil(img, position):
 if __name__ == "__main__":
     # 运行目录
     # experiment_dir = "experiments/onet_final"
-    experiment_dir = "experiments/onet_neg_15"
+    experiment_dir = "experiments/onet"
     config = Config.Config(os.path.join(experiment_dir,"config.json"))
     config.show()
     # session

@@ -84,7 +84,7 @@ class TripletSelection:
 if __name__ == "__main__":
     dir =r"E:\iris_crop"
     dataset = TripletSelection(dir,1900)
-    batch = dataset.getBatch(5,5)
+    batch = dataset.getBatch(192,5,5)
     Utils.showImage(batch[0][0])
     print(batch[1][0])
     dataset.show()

@@ -161,15 +161,15 @@ def v4MTCNNAug(img, loc):
     # drawRandomLine(img,(5,10), (0,3), color_range=(0,50))
 
     # 翻转+模糊+crop
-    seq = iaa.Sequential([
-        # iaa.SomeOf((0,1),   [iaa.Fliplr(0.5)]),        # 一半的概率左右翻转
-        iaa.OneOf([
-            iaa.GaussianBlur((0, 3.0)),
-            iaa.AverageBlur(k=(2, 3)),
-            iaa.MedianBlur(k=(3, 7)),
-        ])
-     ])
-    img = seq.augment_image(img)
+    # seq = iaa.Sequential([
+    #     # iaa.SomeOf((0,1),   [iaa.Fliplr(0.5)]),        # 一半的概率左右翻转
+    #     iaa.OneOf([
+    #         iaa.GaussianBlur((0, 3.0)),
+    #         iaa.AverageBlur(k=(2, 3)),
+    #         iaa.MedianBlur(k=(3, 7)),
+    #     ])
+    #  ])
+    # img = seq.augment_image(img)
 
     # 左右翻转
     h, w =img.shape[0],img.shape[1]

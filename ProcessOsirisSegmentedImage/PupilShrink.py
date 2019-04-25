@@ -79,12 +79,16 @@ def shrink_pupil_in_irisimage(img,px,py,pr):
     ir = (h+w)//4
     return  shrink_pupil(img,ix,iy,ir, px, py, pr)
 
+import time
 if __name__ == "__main__":
     path = r"E:\CASIA-V4-Location\train\S5000L00.jpg"
     # path = r"E:\iris_crop_onet_with_proposal\S5004L08.jpg"
+    path = r"E:\iris_crop3\S5006L03.jpg"
     img = cv2.imread(path,cv2.IMREAD_GRAYSCALE)
+    img= shrink_pupil_in_irisimage(img,109,109,30)
     Utils.showImage(img)
+    exit(0)
     for x in range(0,40,10):
+        t1= time.time()
         img = shrink_pupil(img,253,262,91,258,264,x)
-    # img = shrink_pupil_in_irisimage(img, 114,100,30)
-        Utils.showImage(img)
+        print(time.time()-t1)

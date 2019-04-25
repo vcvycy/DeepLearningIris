@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.join(os.getcwd(),".."))
+sys.path.append(os.getcwd())
 import tensorflow as tf
 import os
 import Config
@@ -6,7 +10,7 @@ from MTCNN4Iris.IrisPNet import IrisPNet
 
 if __name__ == "__main__":
     # 运行目录
-    experiment_dir = "experiments/pnet_expand_0.08"
+    experiment_dir = "experiments/pnet"
     config = Config.Config("{0}/config.json".format(experiment_dir))
     config.show()
     # session
@@ -25,10 +29,11 @@ if __name__ == "__main__":
     cur_step = 0
     learning_rate = config.learning_rate
     while cur_step< config.total_training_steps:
-        if cur_step == 1500:
-            learning_rate *=0.1
+        if cur_step <2000:
+            learning_rate=1e-4
+        else:
+            learning_rate=1e-5
         input , label_prob, label_bbr = train_data.getBatchForPNet(config.batch_size,config.pos_region_each_image, config.neg_region_each_image)
-
         loss,cur_step = pnet.train(input , label_prob, label_bbr,learning_rate)
         print("[*] Step[{0}] loss{1} ".format(cur_step,loss))
         # 每隔 save_every_steps ，保存一次模型

@@ -47,6 +47,23 @@ def _pairwise_distances(embeddings, squared=False):
 
     return distances
 
+# (*) 返回embeddings 经过eweight加权后，两两之间的距离
+def distances_with_weight(embeddings,eweight):
+    # 参数说明：
+    # (1) embeddings 为特征向量(二维展开为一维)
+    # (2) eweight 为特征向量的权值
+    eweight0 = tf.expand_dims(eweight,0)
+    eweight1 = tf.expand_dims(eweight,1)
+    eweight_3d = eweight0 * eweight1           # eweight_3d[i,j]表示第i个emb和第j个emb的权值
+    embed0 = tf.expand_dims(embeddings,0)
+    embed1 = tf.expand_dims(embeddings,1)
+    embed_weighted = embed1 * eweight_3d       # embed_weighted[i,j] 表示第第i个emb和第j个emb加完权值后的特征值
+    embed_l2 = tf.nn.l2_normalize(embed_weighted, 2)  # 加权后的向量L2归一化。大小batch*bacth*n
+    embed_l2_transpose = tf.transpose(embed_l2, [1, 0, 2])
+    # 求加权后的embedding距离
+    dist = tf.reduce_sum(embed_l2 * embed_l2 + embed_l2_transpose * embed_l2_transpose - 2 * embed_l2 * embed_l2_transpose, 2)
+    dist =  tf.maximum(dist, 0.0)
+    return dist
 
 # 返回boolean 所有二元组，如果二者label一致则为True
 def _get_anchor_positive_triplet_mask(labels):
@@ -141,6 +158,60 @@ def batch_all_triplet_loss(labels, embeddings, margin, squared=False):
     # (1)返回两两之间的欧式距离, batch_size* batch_size ,
     # Get the pairwise distance matrix
     pairwise_dist = _pairwise_distances(embeddings, squared=squared)
+
+    # shape (batch_size, batch_size, 1) 在第2维后，添加一个1的维度
+    anchor_positive_dist = tf.expand_dims(pairwise_dist, 2)
+    assert anchor_positive_dist.shape[2] == 1, "{}".format(anchor_positive_dist.shape)
+    # shape (batch_size, 1, batch_size)
+    anchor_negative_dist = tf.expand_dims(pairwise_dist, 1)
+    assert anchor_negative_dist.shape[1] == 1, "{}".format(anchor_negative_dist.shape)
+
+    # Compute a 3D tensor of size (batch_size, batch_size, batch_size)
+    # triplet_loss[i, j, k] will contain the triplet loss of anchor=i, positive=j, negative=k
+    # Uses broadcasting where the 1st argument has shape (batch_size, batch_size, 1)
+    # and the 2nd (batch_size, 1, batch_size)
+    # 巧妙的方法:  triplet_loss[i,j,k] = d[i,j,1] - d[i,1,k] +margin = d[i,j] - d[i,k] +margin
+    triplet_loss = anchor_positive_dist - anchor_negative_dist + margin
+
+    # Put to zero the invalid triplets
+    # (where label(a) != label(p) or label(n) == label(a) or a == p)
+    mask = _get_triplet_mask(labels)             # mask(n*n*n) ，当且仅当 label(a)=label(p)!=label(n) 且a!=p时，mask = True mask[a,p,n]=1
+    mask = tf.to_float(mask)
+    triplet_loss = tf.multiply(mask, triplet_loss)
+
+    # 即 当 dist(a,n) - dist(a,p) > margin时，此三元组Loss为0 ，不参与训练
+    # Remove negative losses (i.e. the easy triplets)
+    triplet_loss = tf.maximum(triplet_loss, 0.0)
+
+    # Count number of positive triplets (where triplet_loss > 0)
+    valid_triplets = tf.to_float(tf.greater(triplet_loss, 1e-16))
+    num_positive_triplets = tf.reduce_sum(valid_triplets)          # positive_triplets ：即loss 值>0 的合法triplet
+    num_valid_triplets = tf.reduce_sum(mask)                       # 所有valid的 triplets (即 label(a)=label(p)!=label(n) 且a!=p时)
+    fraction_positive_triplets = num_positive_triplets / (num_valid_triplets + 1e-16)  # 合法(loss>0) 的三元组占的比例
+
+    # Get final mean triplet loss over the positive valid triplets
+    triplet_loss = tf.reduce_sum(triplet_loss) / (num_positive_triplets + 1e-16)       # 合法的三元组 的平均loss值
+
+    return triplet_loss, fraction_positive_triplets
+
+def batch_all_triplet_loss_semi(labels, embeddings,eweight,margin, squared=False):
+    """Build the triplet loss over a batch of embeddings.
+
+    We generate all the valid triplets and average the loss over the positive ones.
+
+    Args:
+        labels: labels of the batch, of size (batch_size,)
+        embeddings: tensor of shape (batch_size, embed_dim)
+        margin: margin for triplet loss
+        squared: Boolean. If true, output is the pairwise squared euclidean distance matrix.
+                 If false, output is the pairwise euclidean distance matrix.
+
+    Returns:
+        triplet_loss: scalar tensor containing the triplet loss
+    """
+    # (1)返回两两之间的欧式距离, batch_size* batch_size ,
+    # Get the pairwise distance matrix
+    pairwise_dist = distances_with_weight(embeddings,eweight) #_pairwise_distances(embeddings, squared=squared)
 
     # shape (batch_size, batch_size, 1) 在第2维后，添加一个1的维度
     anchor_positive_dist = tf.expand_dims(pairwise_dist, 2)

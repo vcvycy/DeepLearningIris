@@ -63,7 +63,6 @@ class DSV4MTCNN(DSIris):
         return filename,img,label
 
         # (*) 获取一个batch  image , prob, bbr 三元组
-
     def getBatchForONet(self, batch_size, pos_region_each_image, neg_region_each_image):  # batch_size :4的倍数
 
         # 正负样本

@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.join(os.getcwd(),".."))
+sys.path.append(os.getcwd())
 import tensorflow as tf
 import os
 import Config
@@ -6,7 +10,7 @@ from MTCNN4Iris.IrisONet import IrisONet
 
 if __name__ == "__main__":
     # 运行目录
-    experiment_dir = "experiments/onet_neg_15_pupil"
+    experiment_dir = "experiments/onet"
     config = Config.Config("{0}/config.json".format(experiment_dir))
     config.show()
     # session
@@ -23,8 +27,10 @@ if __name__ == "__main__":
     cur_step = 0
     learning_rate = config.learning_rate
     while cur_step< config.total_training_steps:
-        if cur_step == 2000:
-            learning_rate *= 0.1
+        if cur_step < 2000:
+            learning_rate =1e-4
+        else:
+            learning_rate =1e-5
         batch = train_data.getBatchForONet(config.batch_size,config.pos_region_each_image, config.neg_region_each_image)
         assert len(batch[0]) == config.batch_size ," {0} != {1}".format(len(batch[0]), config.batch_size)
         loss,cur_step = onet.train(batch[0],batch[1],batch[2],learning_rate)

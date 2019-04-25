@@ -22,6 +22,10 @@ def showImage(mat,name=None):
     if name==None:
         name = "%d x %d" %(mat.shape[0],mat.shape[1])
     cv2.namedWindow(name)
+    if mat.shape[0]>600:
+        scale = mat.shape[0]/600
+        shape2= 600,int(mat.shape[1]/scale)
+        mat = resize(mat,shape2)
     cv2.imshow(name,mat)
     cv2.waitKey(0)
     #ia.imshow(mat)
@@ -40,6 +44,9 @@ def drawAndShowBaseOnCNNOutput(img, o):
     showImage(img)
     return
 
+def drawCircle(img,x,y,r):
+    cv2.circle(img, (x,y), r, (0,0,255), thickness=3)
+    return
 # 在图中画虹膜、瞳孔位置，然后显示出来
 def drawIrisAndShow(img, postion,copy=True,show=True):
     if copy:
@@ -151,8 +158,10 @@ def shrinkRect(rect, share=0.08):
 
 def drawRectsListAndShow(img,rects):
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+    red=(0,0,255)
     for r in rects:
-        img = cv2.rectangle(img, (r[1], r[0]), (r[3], r[2]), color=rndColor(), thickness=2)
+        img = cv2.rectangle(img, (r[1], r[0]), (r[3], r[2]), color=red,# rndColor(),
+                            thickness=img.shape[0]//200)
     showImage(img)
     return
 

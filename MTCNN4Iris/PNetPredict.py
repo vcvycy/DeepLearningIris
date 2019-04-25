@@ -45,16 +45,19 @@ class PNetPredictor():
         assert  img.shape[2] == 1
         # 图像金字塔，然后放入网络运行
         img_pyramid = Utils.getImagePyramid(img)
+        tmp = []
         results = []                             # 保存所有图片的满足threshold> 0.7的方框。( rect , prob ,bbr) 三元组列表
         for s_img,scale in img_pyramid:
             prob,bbr = self.pnet.predict([s_img])
             rects_prob_bbr = self.parsePNetOutput(prob[0],bbr[0],scale,pnet_threshold = threshold)
             for item in rects_prob_bbr:
                 r = item[0]
+                tmp.append(r)
                 if r[2]-r[0] > min_size:
                     results.append(item)
                 # print(item[2])
-
+        print(tmp[0])
+        Utils.drawRectsListAndShow(img,tmp)
         # nms
         rects_bbr = [Utils.bbr_calibrate(item[0],item[2]) for item in results]
         probs = [item[1] for item in results]
@@ -71,7 +74,9 @@ class PNetPredictor():
             r = Utils.bbr_calibrate(item[0], item[2], shape)
             if r[2]-r[0] > min_size and r[3]-r[1] > min_size:
                 calibrated_rects.append(r)
-        return calibrated_rects
+        for item in results:
+            print(item[2])
+        return calibrated_rects,[item[0] for item in results]
 
 
 if __name__ == "__main__":
