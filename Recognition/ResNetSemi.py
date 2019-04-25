@@ -248,7 +248,7 @@ class ResNet:
         with tf.variable_scope("TripletLoss"):
             if config.use_triplet_loss:
                 self.batch_all_loss =  TripletLoss.batch_all_triplet_loss_semi(self.desired_out, self.embed,self.eweight,config.triplet_loss_margin)[0]
-                self.batch_hard_loss =  TripletLoss.batch_hard_triplet_loss_semi(self.desired_out, self.embed, config.triplet_loss_margin)
+                self.batch_hard_loss =  TripletLoss.batch_hard_triplet_loss_semi(self.desired_out, self.embed,self.eweight, config.triplet_loss_margin)
                 self.trilet_loss = self.batch_all_loss_weight * self.batch_all_loss + self.batch_hard_loss_weight * self.batch_hard_loss
             else:
                 self.trilet_loss = tf.constant(0.0, dtype=tf.float32)
