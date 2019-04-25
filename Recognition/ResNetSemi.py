@@ -62,7 +62,7 @@ class ResNet:
         return loss, global_step
 
     def forward(self, batch_input):
-        return self.sess.run(self.embed, feed_dict={self.input: batch_input})
+        return self.sess.run([self.embed,self.eweight], feed_dict={self.input: batch_input})
 
     def getSaverCollection(self):
         vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='EmbeddingLayers')

@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.join(os.getcwd(),".."))
 sys.path.append(os.getcwd())
 from Recognition.TripletSelection import TripletSelection
-from Recognition import RecogTest
+from Recognition import RecogTestSemi
 import tensorflow as tf
 from Recognition import ResNetSemi
 from Recognition import  DSV4Recog
@@ -46,6 +46,8 @@ if __name__ == "__main__":
     # restore
     try:
         resnet.restore_embedding(os.path.join(os.path.join(train_on_dir, "model")))
+        print("[*] 测试精度:%s" %(config.test_dir))
+        print("[*] %s" %(RecogTestSemi.getModelFARFRR(resnet,config.test_dir, config)))
     except:
         print("[*] restore失败")
 
@@ -69,8 +71,7 @@ if __name__ == "__main__":
         if cur_step % config.save_every_steps == 0:
             resnet.save_embedding(os.path.join(train_on_dir,"model/at_step"), cur_step)
             print("[*] 测试精度:%s" %(config.test_dir))
-            print("[*] %s" %(RecogTest.getModelFARFRR(resnet,config.test_dir, config)))
-
+            print("[*] %s" %(RecogTestSemi.getModelFARFRR(resnet,config.test_dir, config)))
         # resnet.save_embedding(os.path.join(train_on_dir,"model/at_step"), cur_step)
         # 更新配置
         config.update(config_path)
