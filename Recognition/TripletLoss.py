@@ -310,3 +310,61 @@ def batch_hard_triplet_loss(labels, embeddings, margin, squared=False):
     triplet_loss = tf.reduce_mean(triplet_loss)
 
     return triplet_loss
+
+def batch_hard_triplet_loss_semi(labels, embeddings, eweight,margin, squared=False):
+    """Build the triplet loss over a batch of embeddings.
+
+    For each anchor, we get the hardest positive and hardest negative to form a triplet.
+
+    Args:
+        labels: labels of the batch, of size (batch_size,)
+        embeddings: tensor of shape (batch_size, embed_dim)
+        margin: margin for triplet loss
+        squared: Boolean. If true, output is the pairwise squared euclidean distance matrix.
+                 If false, output is the pairwise euclidean distance matrix.
+
+    Returns:
+        triplet_loss: scalar tensor containing the triplet loss
+    """
+    # 两两之间的距离
+    # Get the pairwise distance matrix
+    pairwise_dist = distances_with_weight(embeddings,eweight)
+
+
+    # 获取Anchor - Postive 的Mask，表示二元组是否合法
+    # For each anchor, get the hardest positive
+    # First, we need to get a mask for every valid positive (they should have same label)
+    mask_anchor_positive = _get_anchor_positive_triplet_mask(labels)
+    mask_anchor_positive = tf.to_float(mask_anchor_positive)
+
+    # 不合法的anchor-postive二元组，距离清空为0
+    # We put to 0 any element where (a, p) is not valid (valid if a != p and label(a) == label(p))
+    anchor_positive_dist = tf.multiply(mask_anchor_positive, pairwise_dist)
+
+    # 每个anchor，找出距离其最大的 postive 样例
+    # shape (batch_size, 1)
+    hardest_positive_dist = tf.reduce_max(anchor_positive_dist, axis=1)
+    tf.summary.scalar("hardest_positive_dist", tf.reduce_mean(hardest_positive_dist))
+
+    # 每个anchor 找出距离其最小的 negtive 样例
+    # For each anchor, get the hardest negative
+    # First, we need to get a mask for every valid negative (they should have different labels)
+    mask_anchor_negative = _get_anchor_negative_triplet_mask(labels)
+    mask_anchor_negative = tf.to_float(mask_anchor_negative)
+
+    # We add the maximum value in each row to the invalid negatives (label(a) == label(n))
+    max_anchor_negative_dist = tf.expand_dims(tf.reduce_max(pairwise_dist, axis=1), 1)
+    anchor_negative_dist = pairwise_dist + max_anchor_negative_dist * (1.0 - mask_anchor_negative)
+
+    # 最近的negtive 样例：shape (batch_size,)
+    hardest_negative_dist = tf.expand_dims(tf.reduce_min(anchor_negative_dist, axis=1,),1)
+    tf.summary.scalar("hardest_negative_dist", tf.reduce_mean(hardest_negative_dist))
+
+    # 最终的triplet loss 值
+    # Combine biggest d(a, p) and smallest d(a, n) into final triplet loss
+    triplet_loss = tf.maximum(hardest_positive_dist - hardest_negative_dist + margin, 0.0)
+
+    # Get final mean triplet loss
+    triplet_loss = tf.reduce_mean(triplet_loss)
+
+    return triplet_loss
