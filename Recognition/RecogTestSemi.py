@@ -97,8 +97,8 @@ def getFarFrrByDist(dist,labels, threshold):
                 if labeli != labelj:
                     false_accept += 1
 
-    FAR = false_accept / accept_num
-    FRR = false_reject / need_accept
+    FAR = false_accept / max(accept_num,1)
+    FRR = false_reject / max(need_accept,1)
     return FAR,FRR, (false_accept, accept_num , false_reject, need_accept)
 
 def getModelFARFRR(resnet, test_dir, config):
@@ -125,6 +125,44 @@ def getModelFARFRR(resnet, test_dir, config):
         "frr_when far=1e-3 threshold" : frr_3threshold
     }
 
+def getDistNor(resnet,paths,h,w):
+    embeddings =[]
+    eweight=[]
+    for p in paths:
+        img = cv2.imread(p, cv2.IMREAD_GRAYSCALE)
+        img = Utils.resize(img,(w,h))
+        img =np.reshape(img, (h,w, 1))
+        # Utils.showImage(img)
+        output=resnet.forward([img])
+        embeddings.append(output[0][0])
+        eweight.append(output[1][0])
+    embeddings = np.array(embeddings)
+    eweight = np.array(eweight)
+    return getNpDist(embeddings,eweight)
+
+def getModelFARFRRNor(resnet, test_dir, config):
+    # 读取所有文件和文件对应的label值
+    filename2path = Utils.getFile2Path(test_dir)
+    path_list = [filename2path[f] for f in filename2path]
+    labels = [getLabelFromFilename(f) for f in filename2path]
+    n = len(path_list)
+    print("[*] 测试文件个数:%s" % (n))
+    # dist = getMinDistWithRoatate(resnet, path_list, [0], sz=config.input_size, dim=config.dims)
+    dist = getDistNor(resnet,path_list,config.input_height,config.input_width)
+
+    # FAR = 1e-3
+    frr_3, frr_3threshold = getFRRWhenFARat(dist, labels, far_below=1e-3)
+    print("[*] 当FAR = 0.1%%， FRR=%s threshold=%s" % (frr_3, frr_3threshold))
+
+    # Equal Error Rate
+    data, threshold = getEqualErrorRate(dist, labels)
+    print("Equal Error Rate %s(far) %s(frr) threshold=%s" % (data[0], data[1], threshold))
+    return {
+        "eer" :  data[0],
+        "err_threshold" : threshold,
+        "frr_when far=1e-3" : frr_3,
+        "frr_when far=1e-3 threshold" : frr_3threshold
+    }
 if __name__ == "__main__":
     # 读取训练存放目录；已经目录中的配置文件
     parser = argparse.ArgumentParser()

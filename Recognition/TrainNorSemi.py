@@ -67,11 +67,13 @@ if __name__ == "__main__":
                                                         )
         print("[*] Step[{0}] loss{1} ".format(cur_step,loss))
 
+        # print("[*] 测试精度:%s" % (config.test_dir))
+        # print("[*] %s" % (RecogTestSemi.getModelFARFRRNor(resnet, config.test_dir, config)))
         # 每隔 save_every_steps ，保存一次模型
         if cur_step % config.save_every_steps == 0:
             resnet.save_embedding(os.path.join(train_on_dir,"model/at_step"), cur_step)
             print("[*] 测试精度:%s" %(config.test_dir))
-            print("[*] %s" %(RecogTestSemi.getModelFARFRR(resnet,config.test_dir, config)))
+            print("[*] %s" %(RecogTestSemi.getModelFARFRRNor(resnet,config.test_dir, config)))
         # resnet.save_embedding(os.path.join(train_on_dir,"model/at_step"), cur_step)
         # 更新配置
         config.update(config_path)
