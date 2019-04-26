@@ -72,6 +72,35 @@ class TripletSelection:
             batch[0].append(img)
             batch[1].append(label)
         return batch
+        # 读取+图片增强
+
+    def readImageAndAugNor(self, path, height,width):
+        img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+        # 先缩放到 size* size 再在高和宽各减去self.crop_pixels个像素
+        #print(img.shape)
+        #Utils.showImage(img)
+
+        img = cv2.resize(img, (width, height), interpolation=cv2.INTER_CUBIC)
+        #print(img.shape)
+        img = np.reshape(img, (height, width, 1))
+        #Utils.showImage(img)
+        return img
+        #
+        crop_start_h = random.randint(0, crop_pad - 1)
+        crop_start_w = random.randint(0, crop_pad - 1)
+
+        img = img[crop_start_h: crop_start_h + input_size, crop_start_w: input_size + crop_start_w]
+        return img
+
+    def getBatchNor(self, height,width, classes_each_batch=16, images_each_class = 5):
+        paths = self.getTripletName(classes_each_batch, images_each_class)
+        batch = [[],[],[]]
+        for p in paths:
+            img = self.readImageAndAugNor(p, height,width)
+            label = self.__getLabelFromFilename(os.path.basename(p))
+            batch[0].append(img)
+            batch[1].append(label)
+        return batch
 
     def __getLabelFromFilename(self,filename):
         eye_lr = filename[5]
@@ -82,9 +111,6 @@ class TripletSelection:
         return label
 
 if __name__ == "__main__":
-    dir =r"E:\iris_crop"
-    dataset = TripletSelection(dir,1900)
-    batch = dataset.getBatch(192,5,5)
-    Utils.showImage(batch[0][0])
-    print(batch[1][0])
-    dataset.show()
+    dir =r"E:/IrisNormalizedImage"
+    ds = TripletSelection(dir, 1900)
+    ds.getBatchNor(64,512)
