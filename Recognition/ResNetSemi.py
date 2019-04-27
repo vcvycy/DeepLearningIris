@@ -177,7 +177,7 @@ class ResNet:
 
     def __init__(self,sess, config, tboard_dir):  #
         self.config = config
-        input_shape = [None,config.input_size,config.input_size,1]
+        input_shape = [None,config.input_height,config.input_width,1]
         output_shape = [None]
         stack_n = config.resnet_stack_n
         self.sess = sess
@@ -195,7 +195,6 @@ class ResNet:
             # (2)插入卷积层+池化层
             x = layers[-1]
             y = self.conv(x, "first_conv", 16, ksize=[3, 3])
-            y = self.max_pool(y, "first_pool")
             layers.append(y)
             with tf.variable_scope("Residual_Blocks"):
                 with tf.variable_scope("Residual_Blocks_STACK_0"):
@@ -219,25 +218,17 @@ class ResNet:
                         x = layers[-1]
                         b = self.res_block(x, 32, "block_%d" % (id))
                         layers.append(b)
-                with tf.variable_scope("Residual_Blocks_STACK_3"):
-                    x = layers[-1]
-                    b = self.res_block(x, 16, "block_0", True)
-                    layers.append(b)
-                    for id in range(1, stack_n):
-                        x = layers[-1]
-                        b = self.res_block(x, 16, "block_%d" % (id))
-                        layers.append(b)
 
             # (4)embedding 层
             with tf.variable_scope("Embedding"):
                 x = self.bn(layers[-1])
                 y = self.conv(x, "mat_embedding", 1, ksize=[1, 1])
-                y = tf.reshape(y,[-1,144],name="flatten")
+                sz = y.shape[1]*y.shape[2]
+                y = tf.reshape(y,[-1,sz],name="flatten")
                 # eweight
-                self.eweight = tf.nn.sigmoid(tf.reshape(self.conv(x,"mat_weight",1,ksize=[1,1]),[-1,144]));
+                self.eweight = tf.nn.sigmoid(tf.reshape(self.conv(x,"mat_weight",1,ksize=[1,1]),[-1,sz]));
                 self.embed = y # tf.nn.l2_normalize(y,1)
                 layers.append(self.embed)
-
         self.learning_rate = tf.placeholder(tf.float32, name="learning_rate")
         self.desired_out = tf.placeholder(tf.float32, output_shape, name="desired_out")
         self.global_step = tf.Variable(0, name="global_step", trainable=False)

@@ -5,7 +5,7 @@ sys.path.append(os.getcwd())
 from Recognition.TripletSelection import TripletSelection
 from Recognition import RecogTestSemi
 import tensorflow as tf
-from Recognition import ResNetSemi
+from Recognition import ResNetNorSemi
 from Recognition import  DSV4Recog
 from Config import Config
 import argparse
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     # 读取训练存放目录；已经目录中的配置文件
     parser = argparse.ArgumentParser()
     parser.add_argument("--training_dir",default="semi")
-    parser.add_argument("--gpu")
+    parser.add_argument("--gpu",default="0")
     cmd_args = parser.parse_args()
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -41,22 +41,21 @@ if __name__ == "__main__":
 
     sess = tf.Session()
     #网络
-    resnet=ResNetSemi.ResNet(sess, config, os.path.join(train_on_dir, "tboard"))
+    resnet=ResNetNorSemi.ResNet(sess, config, os.path.join(train_on_dir, "tboard"))
     print("[*]网络参数%d" %(resnet.param_num))
     # restore
     try:
         resnet.restore_embedding(os.path.join(os.path.join(train_on_dir, "model")))
-        print("[*] 测试精度:%s" %(config.test_dir))
-        print("[*] %s" %(RecogTestSemi.getModelFARFRR(resnet,config.test_dir, config)))
+        # print("[*] 测试精度:%s" %(config.test_dir))
+        # print("[*] %s" %(RecogTestSemi.getModelFARFRRNor(resnet,config.test_dir, config)))
     except:
         print("[*] restore失败")
-
     # 数据集
     ds = TripletSelection(config.iris_training_images_dir, config.training_classes)
 
     # 开始训练
     while True:
-        batch = ds.getBatch(config.input_size, config.batch_class_num, config.batch_img_num_each_class)
+        batch = ds.getBatch(config.input_height, config.batch_class_num, config.batch_img_num_each_class)
         loss,cur_step = resnet.trainWithClassification(batch_input = batch[0],
                                                        batch_output = batch[1],
                                                        batch_output_ont_hot= toOneHot(batch[1],config.training_classes),
@@ -67,11 +66,13 @@ if __name__ == "__main__":
                                                         )
         print("[*] Step[{0}] loss{1} ".format(cur_step,loss))
 
+        # print("[*] 测试精度:%s" % (config.test_dir))
+        # print("[*] %s" % (RecogTestSemi.getModelFARFRRNor(resnet, config.test_dir, config)))
         # 每隔 save_every_steps ，保存一次模型
         if cur_step % config.save_every_steps == 0:
             resnet.save_embedding(os.path.join(train_on_dir,"model/at_step"), cur_step)
-            print("[*] 测试精度:%s" %(config.test_dir))
-            print("[*] %s" %(RecogTestSemi.getModelFARFRR(resnet,config.test_dir, config)))
+            # print("[*] 测试精度:%s" %(config.test_dir))
+            # print("[*] %s" %(RecogTestSemi.getModelFARFRRNor(resnet,config.test_dir, config)))
         # resnet.save_embedding(os.path.join(train_on_dir,"model/at_step"), cur_step)
         # 更新配置
         config.update(config_path)

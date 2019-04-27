@@ -47,10 +47,9 @@ if __name__ == "__main__":
     try:
         resnet.restore_embedding(os.path.join(os.path.join(train_on_dir, "model")))
         print("[*] 测试精度:%s" %(config.test_dir))
-        print("[*] %s" %(RecogTestSemi.getModelFARFRR(resnet,config.test_dir, config)))
+        print("[*] %s" %(RecogTestSemi.getModelFARFRRNor(resnet,config.test_dir, config)))
     except:
         print("[*] restore失败")
-
     # 数据集
     ds = TripletSelection(config.iris_training_images_dir, config.training_classes)
 

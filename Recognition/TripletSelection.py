@@ -59,7 +59,6 @@ class TripletSelection:
         #
         crop_start_h = random.randint(0,crop_pad-1)
         crop_start_w = random.randint(0,crop_pad-1)
-
         img = img[crop_start_h: crop_start_h + input_size, crop_start_w: input_size + crop_start_w]
         return img
 
