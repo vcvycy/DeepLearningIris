@@ -225,8 +225,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # parser.add_argument("--training_dir",default="TripletSelection")
     parser.add_argument("--training_dir",default="semi_deep")
-    # parser.add_argument("--test_image_dir", default=r"E:\iris_recog_test")
-    parser.add_argument("--test_image_dir", default=r"E:\tmp")
+    parser.add_argument("--test_image_dir", default=r"C:\Users\vcvyc\Desktop\x")
+    #parser.add_argument("--test_image_dir", default=r"E:\tmp")
     cmd_args = parser.parse_args()
 
     # 模型地址

@@ -37,19 +37,51 @@ def getNpDist(embeddings, eweight):
     dist = np.sum(embed_l2 * embed_l2 + embed_l2_transpose * embed_l2_transpose - 2 * embed_l2 * embed_l2_transpose, 2)
     return dist
 
-def getDist(resnet,paths,sz,dim):
+def getDist(resnet,paths,h,w, debug):
     embeddings =[]
     eweight=[]
     for p in paths:
         img = cv2.imread(p, cv2.IMREAD_GRAYSCALE)
-        img = Utils.resize(img,(sz,sz))
-        img =np.reshape(img, (sz, sz, 1))
+        img = Utils.resize(img,(h,w))
+        img =np.reshape(img, (h, w, 1))
         output=resnet.forward([img])
         embeddings.append(output[0][0])
         eweight.append(output[1][0])
+        if debug:
+            visualizeEWeight(output[1][0], img)
     embeddings = np.array(embeddings)
     eweight = np.array(eweight)
     return getNpDist(embeddings,eweight)
+
+def visualizeEWeight(eweight, origin_image):
+    h,w=origin_image.shape[0], origin_image.shape[1]
+    eh,ew= h//4, w//4
+    eweight=np.reshape(eweight,(eh,ew))
+    # 权值矩阵
+    img = np.zeros((h,w),np.uint8)
+    # 加权后的origin_image
+    img_weighted =  np.zeros((h,w,3),np.uint8)
+    for i in range(h):
+        for j in range(w):
+            img[i,j] = int(eweight[i//4,j//4]*255)
+            if eweight[i//4,j//4]>0.1:
+                img_weighted[i,j] = (origin_image[i,j], origin_image[i,j], origin_image[i,j])
+            else:
+                img_weighted[i, j] = (0,255,0)
+
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+    origin_image =cv2.cvtColor(origin_image, cv2.COLOR_GRAY2RGB)
+
+    origin_image = np.reshape(origin_image,(h,w,3))
+    # 红线隔开
+    pad = np.zeros((5,w,3),np.uint8)
+    for i in range(5):
+        for j in range(w):
+            pad[i,j,2]=255
+    #
+    img= np.concatenate((origin_image,pad,img,pad,img_weighted),axis=0)
+    Utils.showImage(img)
+    return img
 
 # 当FAR=1e-3时，FRR的值
 def getFRRWhenFARat(dist, labels, far_below=1e-3):
@@ -101,7 +133,7 @@ def getFarFrrByDist(dist,labels, threshold):
     FRR = false_reject / max(need_accept,1)
     return FAR,FRR, (false_accept, accept_num , false_reject, need_accept)
 
-def getModelFARFRR(resnet, test_dir, config):
+def getModelFARFRR(resnet, test_dir, config,debug=False):
     # 读取所有文件和文件对应的label值
     filename2path = Utils.getFile2Path(test_dir)
     path_list = [filename2path[f] for f in filename2path]
@@ -109,7 +141,7 @@ def getModelFARFRR(resnet, test_dir, config):
     n = len(path_list)
     print("[*] 测试文件个数:%s" % (n))
     # dist = getMinDistWithRoatate(resnet, path_list, [0], sz=config.input_size, dim=config.dims)
-    dist = getDist(resnet,path_list,sz=config.input_size, dim=config.dims)
+    dist = getDist(resnet,path_list,config.input_height,config.input_width, debug)
 
     # FAR = 1e-3
     frr_3, frr_3threshold = getFRRWhenFARat(dist, labels, far_below=1e-3)
@@ -169,7 +201,7 @@ if __name__ == "__main__":
     # parser.add_argument("--training_dir",default="TripletSelection")
     parser.add_argument("--training_dir",default="semi")
     # parser.add_argument("--test_image_dir", default=r"E:\iris_recog_test")
-    parser.add_argument("--test_image_dir", default=r"E:\tmp")
+    parser.add_argument("--test_image_dir", default=r"E:\tmp2")
     cmd_args = parser.parse_args()
 
     # 模型地址
@@ -182,10 +214,9 @@ if __name__ == "__main__":
 
 
     sess = tf.Session()
-    threshold = 0.8
     #网络
     resnet=ResNetSemi.ResNet(sess, config, os.path.join(train_on_dir, "tboard"))
     print("[*]网络参数%d" %(resnet.param_num))
     # restore
     resnet.restore_embedding(os.path.join(os.path.join(train_on_dir, "model")))
-    print(getModelFARFRR(resnet, cmd_args.test_image_dir,config))
+    print(getModelFARFRR(resnet, cmd_args.test_image_dir,config,debug=True))

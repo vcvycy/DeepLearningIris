@@ -215,6 +215,7 @@ def nms(rects, probs, iou_threshold, method):  # method : Union/Min
     return is_remained
 
 def resize(img,shape):
+    #print(shape)
     return cv2.resize(img,shape, interpolation=cv2.INTER_CUBIC)
 
 # 返回图像金字塔，已经其缩放倍数

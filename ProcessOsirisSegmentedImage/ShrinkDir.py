@@ -7,6 +7,7 @@ import cv2
 import time
 import numpy as np
 from ProcessOsirisSegmentedImage import Normalization
+from ProcessOsirisSegmentedImage import PupilShrink
 def getFilenamesFromDir(dir, accept_suffix):  # 文件名list
     suffix = set(accept_suffix.split("|"))
     filename_list = []
@@ -77,21 +78,35 @@ def main(image_root,json_file,save_dir=None,debug=True):
             path = filename2path[filename]
             position = filename2position[filename]
             img = cv2.imread(path,cv2.IMREAD_GRAYSCALE)
-            nor_img = Normalization.normalize(img,position["iris"]["c"][0],
+            rate = position["pupil"]["r"]/position["iris"]["r"]
+            # Utils.drawCircle(img,position["iris"]["c"][0],position["iris"]["c"][1],position["iris"]["r"])
+            if rate>0.3:
+                new_pupil_r = int(0.3*position["iris"]["r"])
+                shrinked_img = PupilShrink.shrink_pupil(img,
                                               position["iris"]["c"][1],
+                                              position["iris"]["c"][0],
                                               position["iris"]["r"],
-                                              position["pupil"]["c"][0],
                                               position["pupil"]["c"][1],
-                                              position["pupil"]["r"],
-                                              )
+                                              position["pupil"]["c"][0],
+                                              max(0,position["pupil"]["r"]-new_pupil_r))
+            else:
+                shrinked_img=img
+
+            height_remained_rate=0.4
+            height = int(position["iris"]["r"]*height_remained_rate)
+            shrinked_img = shrinked_img[position["iris"]["c"][1] - height: position["iris"]["c"][1] + height,
+                                        position["iris"]["c"][0] - position["iris"]["r"]:position["iris"]["c"][0] + position["iris"]["r"],
+                                        ]
+            shrinked_img = cv2.resize(shrinked_img, (200,int(200*height_remained_rate)), interpolation=cv2.INTER_CUBIC)
+            # print(shrinked_img.shape)
             if debug:
                 Utils.showImage(img)
-                Utils.showImage(nor_img)
+                Utils.showImage(shrinked_img)
             else:
                 filename=os.path.basename(path)
                 save_path = os.path.join(save_dir, filename)
                 # Utils.showImage(nor_img)
-                if not cv2.imwrite(save_path,nor_img):
+                if not cv2.imwrite(save_path,shrinked_img):
                     print("Failed")
                     input("")
         except:
@@ -100,5 +115,6 @@ def main(image_root,json_file,save_dir=None,debug=True):
 if __name__ == "__main__":
     json_file=r"E:\CASIA-V4-Location\Iris_Pupil_Position.json"
     src_dir=r"E:\CASIA-V4-Location\train"
-    target_dir=r"E:\IrisNormalizedImage"
-    main(src_dir,json_file,target_dir,debug=False)
+    # src_dir=r"E:\tmp3"
+    target_dir=r"E:\IrisShrinkedImage"
+    main(src_dir,json_file,target_dir,debug=0)

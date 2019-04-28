@@ -1,0 +1,23 @@
+{
+  "iris_training_images_dir" : "E:/tmp3",
+  "iris_training_images_dir1" : "E:/IrisDataset/segmented_iris",
+  "iris_training_images_dir4": "/home/jack/iris_dataset/iris_crop",
+  "iris_training_images_dir2": "/home/jack/iris_dataset/segmented_iris",
+  "test_dir" : "/home/jack/iris_dataset/iris_nor_test",
+  "use_triplet_loss" : 1,
+  "learning_rate" :0.045,
+  "classification_loss_weight": 0 ,
+  "save_every_steps" : 5000,
+  "training_classes": 1900,
+  "input_height": 80,
+  "input_width":200,
+  "__no_use_crop_each_side" :10,
+  "l2_lambda" : 1e-4,
+  "momemtum" : 0.9,
+  "batch_img_num_each_class": 2,
+  "batch_class_num" : 2,
+  "resnet_stack_n" : 1,
+  "triplet_loss_margin" : 0.7,
+  "batch_all_weight" :1,
+  "batch_hard_weight": 0
+}

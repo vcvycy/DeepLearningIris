@@ -45,7 +45,6 @@ class TripletSelection:
             image_paths_for_class = [self.label2path[class_idx][j] for j in idx]
             images_path += image_paths_for_class
             i+=1
-
         return images_path
 
     # 读取+图片增强
@@ -64,6 +63,7 @@ class TripletSelection:
 
     def getBatch(self, input_size, classes_each_batch=16, images_each_class = 5):
         paths = self.getTripletName(classes_each_batch, images_each_class)
+        print(paths)
         batch = [[],[],[]]
         for p in paths:
             img = self.readImageAndAug(p, input_size)
@@ -93,6 +93,7 @@ class TripletSelection:
 
     def getBatchNor(self, height,width, classes_each_batch=16, images_each_class = 5):
         paths = self.getTripletName(classes_each_batch, images_each_class)
+        # print(paths)
         batch = [[],[],[]]
         for p in paths:
             img = self.readImageAndAugNor(p, height,width)
