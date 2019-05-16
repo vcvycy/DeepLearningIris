@@ -179,7 +179,7 @@ class Unet:
                 sz = y.shape[1]*y.shape[2]
                 y = tf.reshape(y,[-1,sz],name="flatten")
                 # eweight
-                self.eweight = tf.nn.sigmoid(tf.reshape(self.conv(x,"mat_weight",1,ksize=[1,1]),[-1,sz]));
+                self.eweight = tf.nn.sigmoid(tf.nn.relu(tf.reshape(self.conv(x,"mat_weight",1,ksize=[1,1]),[-1,sz])))
                 self.embed = y # tf.nn.l2_normalize(y,1)
                 layers["embed"] = self.embed
                 layers["eweight"]=self.eweight
@@ -191,8 +191,8 @@ class Unet:
 
         self.l2_loss = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES),name="l2_loss")
         with tf.variable_scope("TripletLoss"):
-            self.batch_all_loss =  TripletLoss.batch_all_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)[0]
-            self.batch_hard_loss =  TripletLoss.batch_hard_triplet_loss(self.desired_out, self.embed, config.triplet_loss_margin)
+            self.batch_all_loss = TripletLoss.batch_all_triplet_loss_semi(self.desired_out, self.embed, self.eweight,config.triplet_loss_margin)[0]
+            self.batch_hard_loss = TripletLoss.batch_hard_triplet_loss_semi(self.desired_out, self.embed, self.eweight,config.triplet_loss_margin)
             self.trilet_loss = self.batch_all_loss_weight * self.batch_all_loss + self.batch_hard_loss_weight * self.batch_hard_loss
 
         self.loss = tf.add_n([self.l2_loss, self.trilet_loss], name = "WeightedLoss")
