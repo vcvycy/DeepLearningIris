@@ -154,7 +154,7 @@ class Unet:
                 with tf.variable_scope("down_conv_{}".format(out_channel)):
                     conv1 = self.conv(last_layer, "conv1",out_channel,ksize=[3,3])  # bn + conv+ relu
                     conv2 = self.conv(conv1, "conv2",out_channel,ksize=[3,3])
-                    if out_channel != len(channels)-1:
+                    if i != len(channels)-1:
                         last_layer = self.max_pool(conv2,"max_pool")
                     else:
                         last_layer = conv2
