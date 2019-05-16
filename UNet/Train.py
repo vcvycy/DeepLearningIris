@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.join(os.getcwd(),".."))
 sys.path.append(os.getcwd())
 from UNet.TripletSelection import TripletSelection
-from UNet import RecogTestSemi
+from UNet import Test
 import tensorflow as tf
 from UNet import unet,DSV4Recog
 from Config import Config
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     try:
         myunet.restore_embedding(os.path.join(os.path.join(train_on_dir, "model")))
         print("[*] 测试精度:%s" %(config.test_dir))
-        print("[*] %s" % (RecogTestSemi.getModelFARFRRNor(myunet, config.test_dir, config)))
+        print("[*] %s" % (Test.getModelFARFRRNor(myunet, config.test_dir, config)))
     except:
         print("[*] restore失败")
     # 数据集
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         if cur_step % config.save_every_steps == 0:
             myunet.save_embedding(os.path.join(train_on_dir, "model/at_step"), cur_step)
             print("[*] 测试精度:%s" %(config.test_dir))
-            print("[*] %s" % (RecogTestSemi.getModelFARFRRNor(myunet, config.test_dir, config)))
+            print("[*] %s" % (Test.getModelFARFRRNor(myunet, config.test_dir, config)))
         # resnet.save_embedding(os.path.join(train_on_dir,"model/at_step"), cur_step)
         # 更新配置
         config.update(config_path)

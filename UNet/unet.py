@@ -37,7 +37,7 @@ class Unet:
         return loss, global_step
 
     def forward(self, batch_input):
-        return self.sess.run(self.embed, feed_dict={self.input: batch_input})
+        return self.sess.run([self.embed,self.eweight], feed_dict={self.input: batch_input})
 
     def getSaverCollection(self):
         vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='EmbeddingLayers')
@@ -109,7 +109,7 @@ class Unet:
             weight_shape = [3,3,out_channel,in_channel]
             weight = self._get_variable("weight", weight_shape, initializer=self.CONV_WEIGHT_INITAILIZER)
             # print([x_shape[0].value, x_shape[1].value * 2, x_shape[2].value * 2, out_channel])
-            output_shape = tf.stack([self.batch_size, x_shape[1].value * 2, x_shape[2].value * 2, out_channel])
+            output_shape = tf.stack([self.batch_size, x_shape[1] * 2, x_shape[2] * 2, out_channel])
             return tf.nn.relu(tf.nn.conv2d_transpose(x, weight, output_shape, strides=[1, 2, 2, 1], padding='SAME',
                                               name="conv2d_transpose"))
     def max_pool(self, x, name):
@@ -174,7 +174,7 @@ class Unet:
 
             # (4)embedding 层
             with tf.variable_scope("Embedding"):
-                x = self.bn(last_layer)
+                x = last_layer
                 y = self.conv(x, "mat_embedding", 1, ksize=[1, 1])
                 sz = y.shape[1]*y.shape[2]
                 y = tf.reshape(y,[-1,sz],name="flatten")

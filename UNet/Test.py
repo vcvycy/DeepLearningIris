@@ -2,15 +2,16 @@ import sys
 import os
 sys.path.append(os.path.join(os.getcwd(),".."))
 sys.path.append(os.getcwd())
+from UNet.TripletSelection import TripletSelection
+from UNet import Test
+from UNet import unet
 import tensorflow as tf
-from Recognition import ResNetSemi
-from Recognition import  DSV4Recog
+from UNet import unet,DSV4Recog
 from Config import Config
 import argparse
-import cv2
-import  numpy as np
 import Utils
-import math
+import numpy as np
+import cv2
 def getLabelFromFilename( filename):
     eye_lr = filename[5]
     idx = int(filename[2:5])
@@ -45,9 +46,15 @@ def getDist(resnet,paths,h,w, debug):
         img = Utils.resize(img,(w,h))
         # Utils.showImage(img)
         img =np.reshape(img, (h, w, 1))
-        output=resnet.forward([img])
+        imgs = [img for _ in range(10)]
+        output=resnet.forward(imgs)
         embeddings.append(output[0][0])
         eweight.append(output[1][0])
+        print(output[0][0])
+        print(output[1][0])
+        print(output[0][0].mean())
+        print(output[1][0].mean())
+        input("")
         if debug:
             # visualizeEWeight(output[1][0], img)
             Utils.visualize(output[0][0], output[1][0], img)
@@ -200,25 +207,19 @@ def getModelFARFRRNor(resnet, test_dir, config):
 if __name__ == "__main__":
     # 读取训练存放目录；已经目录中的配置文件
     parser = argparse.ArgumentParser()
-    # parser.add_argument("--training_dir",default="TripletSelection")
-    parser.add_argument("--training_dir",default="semi_40")
-    # parser.add_argument("--test_image_dir", default=r"E:\iris_recog_test")
-    parser.add_argument("--test_image_dir", default=r"E:\IrisShrink40_Test")
+    parser.add_argument("--training_dir", default="test")
+    parser.add_argument("--test_image_dir", default=r"E:\IrisNormalizedImage_Test_From_985")
     cmd_args = parser.parse_args()
-
     # 模型地址
-    train_on_dir = os.path.join("./experiments",cmd_args.training_dir)
+    train_on_dir = os.path.join("./experiments", cmd_args.training_dir)
     # 配置文件
-    config_path = os.path.join(train_on_dir,"config.json")
-    print(config_path)
+    config_path = os.path.join(train_on_dir, "config.json")
     config = Config(config_path)
     config.show()
 
-
     sess = tf.Session()
-    #网络
-    resnet=ResNetSemi.ResNet(sess, config, os.path.join(train_on_dir, "tboard"))
-    print("[*]网络参数%d" %(resnet.param_num))
-    # restore
-    resnet.restore_embedding(os.path.join(os.path.join(train_on_dir, "model")))
-    print(getModelFARFRR(resnet, cmd_args.test_image_dir,config,debug=True))
+    # 网络
+    myunet = unet.Unet(sess, config, os.path.join(train_on_dir, "tboard"))
+    print("[*]网络参数%d" % (myunet.param_num))
+    #myunet.restore_embedding(os.path.join(os.path.join(train_on_dir, "model")))
+    print(getModelFARFRR(myunet, cmd_args.test_image_dir,config,debug=True))
