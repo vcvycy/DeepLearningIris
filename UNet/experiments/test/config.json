@@ -1,0 +1,17 @@
+{
+  "iris_training_images_dir3" : "E:/iris_crop",
+  "iris_training_images_dir" : "E:/IrisNormalizedImage_Test_From_985",
+  "iris_training_images_dir1": "/home/jack/iris_dataset/iris_crop3",
+  "iris_training_images_dir2": "/home/jack/iris_dataset/segmented_iris",
+  "input_height":64,
+  "input_width": 512,
+  "learning_rate" :0.045,
+  "save_every_steps" : 5000,
+  "l2_lambda" : 1e-4,
+  "momemtum" : 0.9,
+  "batch_img_num_each_class": 2,
+  "batch_class_num" :5 ,
+  "triplet_loss_margin" : 0.7,
+  "batch_all_weight" :1,
+  "batch_hard_weight": 0
+}
