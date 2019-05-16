@@ -12,15 +12,17 @@ if __name__ == "__main__":
     # 读取训练存放目录；已经目录中的配置文件
     parser = argparse.ArgumentParser()
     parser.add_argument("--training_dir",default="test")
+    parser.add_argument("--gpu",default="0")
     cmd_args = parser.parse_args()
 
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"] = cmd_args.gpu
     # 模型地址
     train_on_dir = os.path.join("./experiments",cmd_args.training_dir)
     # 配置文件
     config_path = os.path.join(train_on_dir,"config.json")
     config = Config(config_path)
     config.show()
-
 
     sess = tf.Session()
     #网络
