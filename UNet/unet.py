@@ -158,7 +158,7 @@ class Unet:
                         last_layer = self.max_pool(conv2,"max_pool")
                     else:
                         last_layer = conv2
-                    layers["down_conv_{}".format(out_channel)]=last_layer
+                    layers["down_conv_{}".format(out_channel)]=conv2
             #上采样
             for i in range(len(channels)-2,-1,-1):
                 out_channel = channels[i]
@@ -179,7 +179,7 @@ class Unet:
                 sz = y.shape[1]*y.shape[2]
                 y = tf.reshape(y,[-1,sz],name="flatten")
                 # eweight
-                self.eweight = tf.nn.sigmoid(tf.nn.relu(tf.reshape(self.conv(x,"mat_weight",1,ksize=[1,1]),[-1,sz])))
+                self.eweight = tf.nn.sigmoid(tf.reshape(self.conv(x,"mat_weight",1,ksize=[1,1]),[-1,sz]))
                 self.embed = y # tf.nn.l2_normalize(y,1)
                 layers["embed"] = self.embed
                 layers["eweight"]=self.eweight
